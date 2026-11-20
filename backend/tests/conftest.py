@@ -12,6 +12,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+from app.core.config import settings  # noqa: E402
 from app.db.models import Base  # noqa: E402
 from app.db.session import get_db  # noqa: E402
 from app.main import app  # noqa: E402
@@ -46,8 +47,13 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     async def _override_get_db() -> AsyncGenerator[AsyncSession, None]:
         yield db_session
 
+    prev_reverse_geo = settings.ENABLE_REVERSE_GEOCODING
+    settings.ENABLE_REVERSE_GEOCODING = False
     app.dependency_overrides[get_db] = _override_get_db
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as async_client:
-        yield async_client
-    app.dependency_overrides.clear()
+    try:
+        async with AsyncClient(transport=transport, base_url="http://testserver") as async_client:
+            yield async_client
+    finally:
+        settings.ENABLE_REVERSE_GEOCODING = prev_reverse_geo
+        app.dependency_overrides.clear()

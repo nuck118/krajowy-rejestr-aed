@@ -145,3 +145,62 @@ async def test_submit_merge_nearest_verify_and_exports(client: AsyncClient) -> N
     upload_data = upload_resp.json()
     assert upload_data["records_valid"] == 1
     assert upload_data["duplicates_merged"] == 1
+
+
+@pytest.mark.asyncio
+async def test_detail_extra_metadata_and_verify_updates_placement(client: AsyncClient) -> None:
+    ingest_resp = await client.post(
+        "/api/v1/ingest/upload",
+        json={
+            "source_name": "pl_geojson",
+            "payload": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {"type": "Point", "coordinates": [18.0119, 53.1336]},
+                        "properties": {
+                            "@osm_type": "node",
+                            "@osm_id": 9529731525,
+                            "emergency": "defibrillator",
+                            "access": "private",
+                            "indoor": "yes",
+                            "operator": "Uniwersytet Medyczny",
+                            "level": "0",
+                            "phone": "+48 52 000 00 00",
+                        },
+                    }
+                ],
+            },
+        },
+    )
+    assert ingest_resp.status_code == 200
+    assert ingest_resp.json()["records_inserted"] == 1
+
+    list_resp = await client.get("/api/v1/aeds?lat=53.1336&lng=18.0119&radius=100")
+    assert list_resp.status_code == 200
+    aed_item = list_resp.json()["items"][0]
+    aed_id = aed_item["id"]
+
+    detail_resp = await client.get(f"/api/v1/aeds/{aed_id}")
+    assert detail_resp.status_code == 200
+    detail = detail_resp.json()
+    assert detail["extra_metadata"]["operator"] == "Uniwersytet Medyczny"
+    assert detail["extra_metadata"]["level"] == "0"
+    assert detail["extra_metadata"]["phone"] == "+48 52 000 00 00"
+    assert detail["extra_metadata"]["osm_url"] == "https://www.openstreetmap.org/node/9529731525"
+
+    prev_score = detail["completeness_score"]
+    verify_resp = await client.post(
+        f"/api/v1/aeds/{aed_id}/verify",
+        json={
+            "action": "confirm_operational",
+            "reporter_org": "RATOWNICTWO",
+            "location_description": "Parter, główny korytarz przy wejściu od ul. Gdańskiej",
+        },
+    )
+    assert verify_resp.status_code == 200
+    verified = verify_resp.json()
+    assert verified["status"] == "operational"
+    assert verified["location_description"] == "Parter, główny korytarz przy wejściu od ul. Gdańskiej"
+    assert verified["completeness_score"] > prev_score

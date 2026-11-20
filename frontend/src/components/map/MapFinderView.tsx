@@ -45,7 +45,7 @@ export function MapFinderView({
   const [searchQuery, setSearchQuery] = useState("");
   const [nearestItems, setNearestItems] = useState<AEDNearestRecord[]>([]);
   const [viewportItems, setViewportItems] = useState<AEDRecord[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedAed, setSelectedAed] = useState<AEDRecord | null>(null);
   const [currentBbox, setCurrentBbox] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,10 +148,12 @@ export function MapFinderView({
     return Array.from(byId.values());
   }, [viewportItems, nearestItems]);
 
+  const selectedId = selectedAed?.id ?? null;
+
   const selectedRecord = useMemo(() => {
-    if (!selectedId) return null;
-    return combinedMapAeds.find((item) => item.id === selectedId) ?? null;
-  }, [combinedMapAeds, selectedId]);
+    if (!selectedAed) return null;
+    return combinedMapAeds.find((item) => item.id === selectedAed.id) ?? selectedAed;
+  }, [combinedMapAeds, selectedAed]);
 
   const selectedDistance = useMemo(() => {
     if (!selectedId) return undefined;
@@ -163,9 +165,11 @@ export function MapFinderView({
   };
 
   const handleSelectAed = (id: string) => {
-    setSelectedId(id);
-    const target = combinedMapAeds.find((item) => item.id === id);
+    const target =
+      combinedMapAeds.find((item) => item.id === id) ??
+      (selectedAed?.id === id ? selectedAed : null);
     if (target) {
+      setSelectedAed(target);
       setLocalFlyTarget({
         lat: target.latitude,
         lng: target.longitude,
@@ -181,7 +185,7 @@ export function MapFinderView({
   const handleQuickCity = (city: { name: string; lat: number; lng: number }) => {
     onOriginChange({ lat: city.lat, lng: city.lng, label: city.name });
     setLocalFlyTarget({ lat: city.lat, lng: city.lng, zoom: 13.5, seq: Date.now() });
-    setSelectedId(null);
+    setSelectedAed(null);
   };
 
   const handleSearchSubmit = async (e: FormEvent) => {
@@ -195,7 +199,7 @@ export function MapFinderView({
     if (geo) {
       onOriginChange({ lat: geo.lat, lng: geo.lng, label: geo.label });
       setLocalFlyTarget({ lat: geo.lat, lng: geo.lng, zoom: 13.8, seq: Date.now() });
-      setSelectedId(null);
+      setSelectedAed(null);
       return;
     }
 
@@ -214,7 +218,7 @@ export function MapFinderView({
           zoom: 14.5,
           seq: Date.now(),
         });
-        setSelectedId(first.id);
+        setSelectedAed(first);
       } else {
         setError(`${t.noSearchMatch} "${query}".`);
         setIsLoading(false);
@@ -225,14 +229,17 @@ export function MapFinderView({
     }
   };
 
-  const handleUpdatedAed = (updated: AEDRecord) => {
+  const handleUpdatedAed = useCallback((updated: AEDRecord) => {
+    setSelectedAed((prev) =>
+      prev && prev.id === updated.id ? { ...prev, ...updated } : prev
+    );
     setNearestItems((prev) =>
       prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
     );
     setViewportItems((prev) =>
       prev.map((item) => (item.id === updated.id ? updated : item))
     );
-  };
+  }, []);
 
   return (
     <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -369,7 +376,7 @@ export function MapFinderView({
                 locale={locale}
                 aed={selectedRecord}
                 distanceMeters={selectedDistance}
-                onBack={() => setSelectedId(null)}
+                onBack={() => setSelectedAed(null)}
                 onUpdated={handleUpdatedAed}
               />
             </div>

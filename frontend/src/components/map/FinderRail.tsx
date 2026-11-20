@@ -85,6 +85,32 @@ export function FinderRail({
         {nearestItems.map((aed) => {
           const isSelected = aed.id === selectedId;
           const isOutOfService = aed.status === "out_of_service";
+          const isOperational = aed.status === "operational";
+          const dotColor = isOutOfService
+            ? "var(--aed-red)"
+            : isOperational
+              ? "var(--status-emerald)"
+              : "var(--ink-secondary)";
+          const statusLabel = isOutOfService
+            ? t.statusOutOfService
+            : isOperational
+              ? aed.is_24_7
+                ? `${t.statusVerified} (24/7)`
+                : t.statusVerified
+              : aed.is_24_7
+                ? `${t.statusUnverified} (24/7)`
+                : t.statusUnverified;
+          const envShort =
+            aed.indoor === true
+              ? t.indoorShort
+              : aed.indoor === false
+                ? t.outdoorShort
+                : null;
+          const fallbackParts = [envShort, t.accessShort[aed.access_type]].filter(Boolean);
+          const displayTitle =
+            aed.location_description ||
+            [aed.street_address, aed.city].filter(Boolean).join(", ") ||
+            (fallbackParts.length > 0 ? `AED (${fallbackParts.join(", ")})` : t.defaultAedTitle);
           return (
             <button
               key={aed.id}
@@ -106,27 +132,13 @@ export function FinderRail({
 
                 <span
                   className="inline-flex items-center gap-1.5 text-xs font-semibold"
-                  style={{
-                    color: isOutOfService ? "var(--aed-red)" : "var(--status-emerald)",
-                  }}
+                  style={{ color: dotColor }}
                 >
                   <span
                     className="w-2 h-2 rounded-full inline-block"
-                    style={{
-                      backgroundColor: isOutOfService
-                        ? "var(--aed-red)"
-                        : "var(--status-emerald)",
-                    }}
+                    style={{ backgroundColor: dotColor }}
                   />
-                  <span>
-                    {isOutOfService
-                      ? t.statusOutOfService
-                      : aed.is_24_7
-                        ? t.status247
-                        : aed.status === "operational"
-                          ? t.statusOperational
-                          : t.statusRecorded}
-                  </span>
+                  <span>{statusLabel}</span>
                 </span>
               </div>
 
@@ -135,7 +147,7 @@ export function FinderRail({
                   isSelected ? "text-[var(--gov-blue)]" : "text-[var(--ink-primary)]"
                 }`}
               >
-                {aed.location_description || t.defaultAedTitle}
+                {displayTitle}
               </p>
 
               <div className="mt-2 flex items-center justify-between gap-2 text-xs text-[var(--ink-secondary)]">

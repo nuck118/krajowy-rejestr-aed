@@ -42,8 +42,27 @@ export interface SourceRecordSummary {
   ingested_at: string;
 }
 
+export interface AEDExtraMetadata {
+  location_pl?: string | null;
+  location_en?: string | null;
+  operator?: string | null;
+  level?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  email?: string | null;
+  wheelchair?: string | null;
+  manufacturer?: string | null;
+  model?: string | null;
+  image_url?: string | null;
+  note?: string | null;
+  fixme?: string | null;
+  source_ref?: string | null;
+  osm_url?: string | null;
+}
+
 export interface AEDDetailRecord extends AEDRecord {
   provenance: SourceRecordSummary[];
+  extra_metadata?: AEDExtraMetadata;
 }
 
 export interface AEDCreatePayload {
@@ -73,6 +92,7 @@ export interface AEDVerifyPayload {
   action: VerificationAction;
   reporter_org?: string | null;
   notes?: string | null;
+  location_description?: string | null;
 }
 
 export interface PaginatedAEDResponse {

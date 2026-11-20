@@ -63,24 +63,32 @@ def build_osm_raw_record(
     desc = (
         props.get("defibrillator:location:pl")
         or props.get("defibrillator:location")
+        or props.get("defibrillator:location:pdt")
         or props.get("defibrillator:location:en")
+        or props.get("defibrillator:location:de")
+        or props.get("defibrillator:location:fr")
         or props.get("description:pl")
         or props.get("description")
+        or props.get("description:en")
+        or props.get("note:pl")
+        or props.get("note")
         or props.get("operator")
         or props.get("name")
     )
     if isinstance(desc, str):
         desc = " ".join(desc.split())
 
-    street = props.get("addr:street")
+    street = props.get("addr:street") or props.get("object:street") or props.get("addr:place")
     housenumber = props.get("addr:housenumber")
     street_address: str | None = None
     if street and housenumber:
         street_address = f"{street} {housenumber}".strip()
     elif street:
         street_address = str(street).strip()
+    elif props.get("object:addr"):
+        street_address = str(props.get("object:addr")).strip()
 
-    city = props.get("addr:city")
+    city = props.get("addr:city") or props.get("object:city")
     raw_postcode = str(props.get("addr:postcode") or "").strip()
     postal_code = raw_postcode if POSTCODE_RE.match(raw_postcode) else None
 

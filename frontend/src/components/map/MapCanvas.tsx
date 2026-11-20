@@ -195,7 +195,7 @@ export function MapCanvas({
               "#475569",
               "#DC2626",
             ],
-            "circle-radius": ["case", ["==", ["get", "selected"], 1], 10, 6.5],
+            "circle-radius": ["case", ["==", ["get", "selected"], 1], 10.5, 7.5],
             "circle-stroke-width": ["case", ["==", ["get", "selected"], 1], 3, 2],
             "circle-stroke-color": [
               "case",

@@ -97,8 +97,27 @@ class AEDRead(AEDIngestCandidate):
     updated_at: datetime
 
 
+class AEDExtraMetadata(BaseModel):
+    location_pl: str | None = None
+    location_en: str | None = None
+    operator: str | None = None
+    level: str | None = None
+    phone: str | None = None
+    website: str | None = None
+    email: str | None = None
+    wheelchair: str | None = None
+    manufacturer: str | None = None
+    model: str | None = None
+    image_url: str | None = None
+    note: str | None = None
+    fixme: str | None = None
+    source_ref: str | None = None
+    osm_url: str | None = None
+
+
 class AEDDetailRead(AEDRead):
     provenance: list[SourceRecordSummary] = Field(default_factory=list)
+    extra_metadata: AEDExtraMetadata = Field(default_factory=AEDExtraMetadata)
 
 
 class AEDNearestRead(AEDRead):
@@ -116,6 +135,14 @@ class AEDVerifyRequest(BaseModel):
     action: VerificationAction
     reporter_org: str | None = Field(default=None, max_length=200)
     notes: str | None = Field(default=None, max_length=500)
+    location_description: str | None = Field(default=None, max_length=500)
+
+    @field_validator("location_description", mode="before")
+    @classmethod
+    def normalize_location_description(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        return _clean_opt_str(str(value))
 
 
 class PaginatedAEDResponse(BaseModel):

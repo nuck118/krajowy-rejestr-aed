@@ -23,6 +23,7 @@ from app.schemas.aed import (
     AccessType,
     AEDCreate,
     AEDDetailRead,
+    AEDExtraMetadata,
     AEDNearestRead,
     AEDRead,
     AEDSubmitResponse,
@@ -31,9 +32,16 @@ from app.schemas.aed import (
     PaginatedAEDResponse,
     SourceRecordSummary,
 )
-from app.services.completeness import completeness_tier, compute_completeness_for_obj, ensure_utc
+from app.services.completeness import (
+    POSTAL_RE,
+    completeness_tier,
+    compute_completeness_for_obj,
+    ensure_utc,
+)
 from app.services.deduplication import upsert_single_candidate
+from app.services.metadata import extract_source_metadata
 from app.services.opening_hours import is_open_now
+from app.services.reverse_geocode import compose_factual_placement, reverse_geocode_poland
 
 router = APIRouter(prefix="/aeds", tags=["AEDs"])
 
@@ -271,6 +279,39 @@ async def get_aed_detail(
     if aed is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AED record not found")
 
+    meta_dict = extract_source_metadata(aed.source_records)
+
+    if settings.ENABLE_REVERSE_GEOCODING and (
+        aed.street_address is None or aed.city is None or aed.location_description is None
+    ):
+        geo = await reverse_geocode_poland(aed.latitude, aed.longitude)
+        if geo is not None:
+            changed = False
+            if aed.street_address is None and geo.street_address:
+                aed.street_address = geo.street_address[:255]
+                changed = True
+            if aed.city is None and geo.city:
+                aed.city = geo.city[:120]
+                changed = True
+            if aed.postal_code is None and geo.postal_code and POSTAL_RE.match(geo.postal_code):
+                aed.postal_code = geo.postal_code
+                changed = True
+            if aed.location_description is None:
+                composed = compose_factual_placement(
+                    geo,
+                    indoor=aed.indoor,
+                    level=meta_dict.get("level"),
+                    operator=meta_dict.get("operator"),
+                )
+                if composed:
+                    aed.location_description = composed
+                    changed = True
+            if changed:
+                aed.updated_at = datetime.now(timezone.utc)
+                aed.completeness_score = compute_completeness_for_obj(aed)
+                await session.commit()
+                await session.refresh(aed, attribute_names=["source_records"])
+
     base = serialize_aed(aed)
     provenance = [
         SourceRecordSummary(
@@ -286,7 +327,11 @@ async def get_aed_detail(
             reverse=True,
         )
     ]
-    return AEDDetailRead(**base.model_dump(), provenance=provenance)
+    return AEDDetailRead(
+        **base.model_dump(),
+        provenance=provenance,
+        extra_metadata=AEDExtraMetadata(**meta_dict),
+    )
 
 
 @router.post(
@@ -342,6 +387,9 @@ async def verify_aed(
         aed.status = "operational"
     else:
         aed.status = "out_of_service"
+
+    if payload.location_description and len(payload.location_description) >= 3:
+        aed.location_description = payload.location_description
 
     aed.last_verified_at = now
     aed.updated_at = now

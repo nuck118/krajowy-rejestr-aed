@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { fetchAedDetail, verifyAed } from "../../api/client";
 import { TRANSLATIONS, type Locale } from "../../i18n/translations";
 import type {
@@ -17,6 +17,16 @@ interface AedDetailPanelProps {
   onUpdated: (updated: AEDRecord) => void;
 }
 
+function formatLevelLabel(
+  rawLevel: string | null | undefined,
+  t: (typeof TRANSLATIONS)[Locale]["detail"]
+): string | null {
+  const trimmed = rawLevel?.trim();
+  if (!trimmed) return null;
+  if (trimmed === "0") return `${t.levelGround} (0)`;
+  return `${t.levelPrefix} ${trimmed}`;
+}
+
 export function AedDetailPanel({
   locale,
   aed,
@@ -25,34 +35,83 @@ export function AedDetailPanel({
   onUpdated,
 }: AedDetailPanelProps) {
   const [detail, setDetail] = useState<AEDDetailRecord | null>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [photoFailed, setPhotoFailed] = useState(false);
   const [showVerifyForm, setShowVerifyForm] = useState(false);
   const [verifyAction, setVerifyAction] = useState<VerificationAction>("confirm_operational");
+  const [placementInput, setPlacementInput] = useState("");
   const [reporterOrg, setReporterOrg] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  const aedRef = useRef(aed);
+  aedRef.current = aed;
+  const onUpdatedRef = useRef(onUpdated);
+  onUpdatedRef.current = onUpdated;
 
   const t = TRANSLATIONS[locale].detail;
   const tiers = TRANSLATIONS[locale].tiers;
 
   useEffect(() => {
     let cancelled = false;
+    const initial = aedRef.current;
     setDetail(null);
+    setIsLoadingDetail(true);
+    setPhotoFailed(false);
     setFeedback(null);
     setShowVerifyForm(false);
+
     fetchAedDetail(aed.id)
       .then((res) => {
-        if (!cancelled) setDetail(res);
+        if (cancelled) return;
+        setDetail(res);
+        if (
+          res.location_description !== initial.location_description ||
+          res.street_address !== initial.street_address ||
+          res.city !== initial.city ||
+          res.postal_code !== initial.postal_code ||
+          res.completeness_score !== initial.completeness_score
+        ) {
+          onUpdatedRef.current(res);
+        }
       })
       .catch(() => {
         // Basic record remains visible if detail fetch fails transiently
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingDetail(false);
       });
+
     return () => {
       cancelled = true;
     };
   }, [aed.id]);
 
   const active = detail ?? aed;
+  const meta = detail?.extra_metadata;
+  const formattedLevel = formatLevelLabel(meta?.level, t);
+  const addressJoined = [active.street_address, active.postal_code, active.city]
+    .filter(Boolean)
+    .join(", ");
+  const envValue =
+    active.indoor === true
+      ? t.envIndoor
+      : active.indoor === false
+        ? t.envOutdoor
+        : t.envUnknown;
+  const envSummary =
+    active.indoor === true ? t.envIndoor : active.indoor === false ? t.envOutdoor : null;
+  const accessLabel = t.accessTypes[active.access_type];
+
+  const primaryTitle =
+    (locale === "en" && meta?.location_en) ||
+    active.location_description ||
+    [addressJoined, meta?.operator, formattedLevel, envSummary, accessLabel]
+      .filter(Boolean)
+      .join(", ") ||
+    t.noPlacementDesc;
+
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${active.latitude},${active.longitude}&travelmode=walking`;
 
   const scoreColor =
@@ -62,15 +121,161 @@ export function AedDetailPanel({
         ? "var(--gov-blue)"
         : "var(--aed-red)";
 
+  const deviceModel = [meta?.manufacturer, meta?.model].filter(Boolean).join(" ");
+  const sourceNote =
+    meta?.note && meta.note !== active.location_description ? meta.note : null;
+
+  const metadataRows: { key: string; label: string; value: ReactNode; highlight?: boolean }[] = [
+    ...(distanceMeters !== undefined
+      ? [
+          {
+            key: "distance",
+            label: t.distanceLabel,
+            highlight: true,
+            value: (
+              <span className="font-bold text-[var(--gov-blue)]">
+                {formatDistance(distanceMeters)} ({walkingMinutes(distanceMeters)}{" "}
+                {TRANSLATIONS[locale].mapView.minWalk})
+              </span>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: "address",
+      label: t.addressLabel,
+      value: <span className="font-medium">{addressJoined || t.addressEmpty}</span>,
+    },
+    ...(meta?.operator
+      ? [{ key: "operator", label: t.operatorLabel, value: meta.operator }]
+      : []),
+    ...(formattedLevel
+      ? [{ key: "level", label: t.levelLabel, value: formattedLevel }]
+      : []),
+    {
+      key: "access",
+      label: t.accessLabel,
+      value: accessLabel,
+    },
+    {
+      key: "hours",
+      label: t.hoursLabel,
+      value: active.opening_hours || (active.is_24_7 ? "24/7" : t.hoursEmpty),
+    },
+    {
+      key: "env",
+      label: t.envLabel,
+      value: envValue,
+    },
+    ...(meta?.phone
+      ? [
+          {
+            key: "phone",
+            label: t.phoneLabel,
+            value: (
+              <a
+                href={`tel:${meta.phone.replace(/[^+\d]/g, "")}`}
+                className="text-[var(--gov-blue)] hover:underline font-medium"
+              >
+                {meta.phone}
+              </a>
+            ),
+          },
+        ]
+      : []),
+    ...(meta?.wheelchair
+      ? [{ key: "wheelchair", label: t.wheelchairLabel, value: meta.wheelchair }]
+      : []),
+    ...(deviceModel
+      ? [{ key: "device", label: t.deviceLabel, value: deviceModel }]
+      : []),
+    ...(sourceNote
+      ? [{ key: "note", label: t.noteLabel, value: sourceNote }]
+      : []),
+    ...(meta?.image_url && !photoFailed
+      ? [
+          {
+            key: "photo",
+            label: t.photoLabel,
+            value: (
+              <div className="space-y-1.5">
+                <img
+                  src={meta.image_url}
+                  alt={primaryTitle}
+                  onError={() => setPhotoFailed(true)}
+                  className="max-h-40 rounded-[3px] border border-[var(--border-hairline)] object-cover"
+                />
+                <a
+                  href={meta.image_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-[var(--gov-blue)] hover:underline"
+                >
+                  <span>{t.openPhoto}</span>
+                  <ExternalLinkIcon className="w-3 h-3" />
+                </a>
+              </div>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: "coords",
+      label: t.coordsLabel,
+      value: (
+        <span className="font-mono text-xs">
+          {active.latitude.toFixed(6)}, {active.longitude.toFixed(6)}
+        </span>
+      ),
+    },
+    {
+      key: "sources",
+      label: t.sourcesLabel,
+      value: (
+        <span className="font-mono text-xs">
+          {(active.sources.length ? active.sources : [active.primary_source]).join(", ")}
+        </span>
+      ),
+    },
+    ...(meta?.osm_url
+      ? [
+          {
+            key: "osm",
+            label: t.osmLinkLabel,
+            value: (
+              <a
+                href={meta.osm_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-medium text-[var(--gov-blue)] hover:underline"
+              >
+                <span>{t.osmOpenLink}</span>
+                <ExternalLinkIcon className="w-3 h-3" />
+              </a>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: "verified",
+      label: t.verifiedLabel,
+      value: active.last_verified_at
+        ? new Date(active.last_verified_at).toISOString().slice(0, 10)
+        : t.verifiedEmpty,
+    },
+  ];
+
   const handleVerifySubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setFeedback(null);
+    const trimmedPlacement = placementInput.trim();
     try {
       const updated = await verifyAed(active.id, {
         action: verifyAction,
         reporter_org: reporterOrg.trim() || null,
         notes: notes.trim() || null,
+        location_description: trimmedPlacement.length >= 3 ? trimmedPlacement : null,
       });
       onUpdated(updated);
       setDetail((prev) => (prev ? { ...prev, ...updated } : null));
@@ -136,70 +341,41 @@ export function AedDetailPanel({
             </span>
           </div>
           <h2 className="text-lg font-bold text-[var(--ink-primary)] leading-snug">
-            {active.location_description || t.noPlacementDesc}
+            {primaryTitle}
           </h2>
+          {!active.location_description && (
+            <p className="text-xs text-[var(--ink-secondary)]">
+              {isLoadingDetail ? t.loadingDetail : t.placementHintMissing}
+            </p>
+          )}
         </div>
 
         <div className="border border-[var(--border-hairline)] rounded-[3px] divide-y divide-[var(--border-hairline)] text-sm">
-          {distanceMeters !== undefined && (
-            <div className="grid grid-cols-3 p-3 gap-2 bg-[var(--bg-callout)]">
-              <span className="text-[var(--ink-primary)] font-medium">{t.distanceLabel}</span>
-              <span className="col-span-2 font-bold text-[var(--gov-blue)]">
-                {formatDistance(distanceMeters)} ({walkingMinutes(distanceMeters)}{" "}
-                {TRANSLATIONS[locale].mapView.minWalk})
+          {metadataRows.map((row, idx) => (
+            <div
+              key={row.key}
+              className={`grid grid-cols-3 p-3 gap-2 ${
+                row.highlight
+                  ? "bg-[var(--bg-callout)]"
+                  : idx % 2 === 1
+                    ? "bg-[var(--bg-surface)]"
+                    : ""
+              }`}
+            >
+              <span
+                className={
+                  row.highlight
+                    ? "text-[var(--ink-primary)] font-medium"
+                    : "text-[var(--ink-secondary)]"
+                }
+              >
+                {row.label}
               </span>
+              <div className="col-span-2 text-[var(--ink-primary)] self-center break-words">
+                {row.value}
+              </div>
             </div>
-          )}
-          <div className="grid grid-cols-3 p-3 gap-2">
-            <span className="text-[var(--ink-secondary)]">{t.addressLabel}</span>
-            <span className="col-span-2 text-[var(--ink-primary)] font-medium">
-              {[active.street_address, active.postal_code, active.city]
-                .filter(Boolean)
-                .join(", ") || t.addressEmpty}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 p-3 gap-2 bg-[var(--bg-surface)]">
-            <span className="text-[var(--ink-secondary)]">{t.accessLabel}</span>
-            <span className="col-span-2 text-[var(--ink-primary)]">
-              {t.accessTypes[active.access_type]}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 p-3 gap-2">
-            <span className="text-[var(--ink-secondary)]">{t.hoursLabel}</span>
-            <span className="col-span-2 text-[var(--ink-primary)]">
-              {active.opening_hours || (active.is_24_7 ? "24/7" : t.hoursEmpty)}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 p-3 gap-2 bg-[var(--bg-surface)]">
-            <span className="text-[var(--ink-secondary)]">{t.envLabel}</span>
-            <span className="col-span-2 text-[var(--ink-primary)]">
-              {active.indoor === true
-                ? t.envIndoor
-                : active.indoor === false
-                  ? t.envOutdoor
-                  : t.envUnknown}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 p-3 gap-2">
-            <span className="text-[var(--ink-secondary)]">{t.coordsLabel}</span>
-            <span className="col-span-2 font-mono text-xs text-[var(--ink-primary)] self-center">
-              {active.latitude.toFixed(6)}, {active.longitude.toFixed(6)}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 p-3 gap-2 bg-[var(--bg-surface)]">
-            <span className="text-[var(--ink-secondary)]">{t.sourcesLabel}</span>
-            <span className="col-span-2 font-mono text-xs text-[var(--ink-primary)] self-center">
-              {(active.sources.length ? active.sources : [active.primary_source]).join(", ")}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 p-3 gap-2">
-            <span className="text-[var(--ink-secondary)]">{t.verifiedLabel}</span>
-            <span className="col-span-2 text-[var(--ink-primary)]">
-              {active.last_verified_at
-                ? new Date(active.last_verified_at).toISOString().slice(0, 10)
-                : t.verifiedEmpty}
-            </span>
-          </div>
+          ))}
         </div>
 
         <div className="space-y-2 pt-1">
@@ -234,7 +410,15 @@ export function AedDetailPanel({
           </a>
           <button
             type="button"
-            onClick={() => setShowVerifyForm((v) => !v)}
+            onClick={() =>
+              setShowVerifyForm((v) => {
+                const next = !v;
+                if (next) {
+                  setPlacementInput(active.location_description ?? "");
+                }
+                return next;
+              })
+            }
             className="h-10 px-4 rounded-[3px] border border-[var(--gov-blue)] bg-[var(--bg-canvas)] hover:bg-[var(--bg-callout)] text-[var(--gov-blue)] text-sm font-semibold cursor-pointer"
           >
             {t.verifyButton}
@@ -272,6 +456,23 @@ export function AedDetailPanel({
                 <option value="report_out_of_service">{t.verifyBroken}</option>
                 <option value="report_missing">{t.verifyMissing}</option>
               </select>
+            </div>
+            <div>
+              <label
+                htmlFor="verify-placement"
+                className="block text-xs font-medium text-[var(--ink-primary)] mb-1"
+              >
+                {t.verifyPlacementLabel}
+              </label>
+              <input
+                id="verify-placement"
+                type="text"
+                maxLength={500}
+                value={placementInput}
+                onChange={(e) => setPlacementInput(e.target.value)}
+                placeholder={t.verifyPlacementPlaceholder}
+                className="w-full h-9 px-2.5 text-sm rounded-[3px] bg-[var(--bg-canvas)] border border-[var(--border-input)] text-[var(--ink-primary)] focus:outline-none focus:border-[var(--gov-blue)]"
+              />
             </div>
             <div>
               <label

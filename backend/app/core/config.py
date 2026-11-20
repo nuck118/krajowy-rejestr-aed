@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
     DATA_DIR: Path = _default_data_dir()
     AUTO_SEED_ON_EMPTY: bool = True
+    ENABLE_REVERSE_GEOCODING: bool = True
 
     @property
     def is_postgres(self) -> bool:
