@@ -1,0 +1,22 @@
+.git/
+.venv/
+backend/.venv/
+frontend/node_modules/
+frontend/src/
+backend/tests/
+backend/*.db
+*.db
+*.db-wal
+*.db-shm
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.DS_Store
+docker-compose.yml
+
+# Keep compiled React SPA and real Polish AED dataset in deployment bundle
+!frontend/dist/
+!frontend/dist/**
+!data/
+!data/PL.geojson

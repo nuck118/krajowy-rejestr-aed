@@ -1,0 +1,352 @@
+from datetime import datetime, timezone
+from typing import Any
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.core.constants import (
+    POLAND_LAT_MAX,
+    POLAND_LAT_MIN,
+    POLAND_LNG_MAX,
+    POLAND_LNG_MIN,
+)
+from app.connectors.direct_submission import build_direct_submission_record
+from app.db.models import AED, AEDVerification
+from app.db.session import get_db
+from app.db.spatial import filter_bbox_clause, find_nearest_aeds, walking_minutes
+from app.schemas.aed import (
+    AccessType,
+    AEDCreate,
+    AEDDetailRead,
+    AEDNearestRead,
+    AEDRead,
+    AEDSubmitResponse,
+    AEDVerifyRequest,
+    NearestAEDResponse,
+    PaginatedAEDResponse,
+    SourceRecordSummary,
+)
+from app.services.completeness import completeness_tier, compute_completeness_for_obj, ensure_utc
+from app.services.deduplication import upsert_single_candidate
+from app.services.opening_hours import is_open_now
+
+router = APIRouter(prefix="/aeds", tags=["AEDs"])
+
+
+def _ordered_sources(aed: AED) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    if aed.primary_source:
+        seen.add(aed.primary_source)
+        ordered.append(aed.primary_source)
+    for sr in getattr(aed, "source_records", []) or []:
+        if sr.source_name not in seen:
+            seen.add(sr.source_name)
+            ordered.append(sr.source_name)
+    return ordered
+
+
+def serialize_aed(aed: AED) -> AEDRead:
+    return AEDRead(
+        id=aed.id,
+        latitude=aed.latitude,
+        longitude=aed.longitude,
+        street_address=aed.street_address,
+        city=aed.city,
+        postal_code=aed.postal_code,
+        teryt_code=aed.teryt_code,
+        location_description=aed.location_description,
+        access_type=aed.access_type,
+        opening_hours=aed.opening_hours,
+        is_24_7=aed.is_24_7,
+        indoor=aed.indoor,
+        status=aed.status,
+        last_verified_at=ensure_utc(aed.last_verified_at),
+        completeness_score=aed.completeness_score,
+        completeness_tier=completeness_tier(aed.completeness_score),
+        primary_source=aed.primary_source,
+        sources=_ordered_sources(aed),
+        open_now=is_open_now(aed.opening_hours, aed.is_24_7),
+        created_at=ensure_utc(aed.created_at) or datetime.now(timezone.utc),
+        updated_at=ensure_utc(aed.updated_at) or datetime.now(timezone.utc),
+    )
+
+
+def _build_filter_clauses(
+    *,
+    city: str | None = None,
+    q: str | None = None,
+    access_type: AccessType | None = None,
+    indoor: bool | None = None,
+    is_24_7: bool | None = None,
+    min_completeness: int | None = None,
+    bbox: str | None = None,
+) -> list[Any]:
+    clauses: list[Any] = []
+    if city:
+        clauses.append(func.lower(AED.city) == city.strip().lower())
+    if q:
+        pattern = f"%{q.strip()}%"
+        clauses.append(
+            or_(
+                AED.location_description.ilike(pattern),
+                AED.street_address.ilike(pattern),
+                AED.city.ilike(pattern),
+            )
+        )
+    if access_type is not None:
+        clauses.append(AED.access_type == access_type)
+    if indoor is not None:
+        clauses.append(AED.indoor.is_(indoor))
+    if is_24_7 is not None:
+        clauses.append(AED.is_24_7.is_(is_24_7))
+    if min_completeness is not None:
+        clauses.append(AED.completeness_score >= min_completeness)
+    if bbox:
+        parts = [p.strip() for p in bbox.split(",")]
+        if len(parts) != 4:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="bbox must be formatted as minLng,minLat,maxLng,maxLat",
+            )
+        try:
+            min_lng, min_lat, max_lng, max_lat = (float(p) for p in parts)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="bbox coordinates must be numeric",
+            ) from exc
+        clauses.append(filter_bbox_clause(min_lng, min_lat, max_lng, max_lat, settings.is_postgres))
+    return clauses
+
+
+@router.get("", response_model=PaginatedAEDResponse)
+async def list_aeds(
+    city: str | None = Query(default=None),
+    q: str | None = Query(default=None, description="Substring search in placement, street, or city"),
+    access_type: AccessType | None = Query(default=None),
+    indoor: bool | None = Query(default=None),
+    is_24_7: bool | None = Query(default=None),
+    open_now: bool | None = Query(default=None),
+    min_completeness: int | None = Query(default=None, ge=0, le=100),
+    bbox: str | None = Query(default=None, description="minLng,minLat,maxLng,maxLat"),
+    lat: float | None = Query(default=None, ge=-90.0, le=90.0),
+    lng: float | None = Query(default=None, ge=-180.0, le=180.0),
+    radius: float | None = Query(default=None, ge=10, le=100_000, description="Radius in meters (alias)"),
+    radius_m: float | None = Query(default=None, ge=10, le=100_000, description="Radius in meters"),
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+    session: AsyncSession = Depends(get_db),
+) -> PaginatedAEDResponse:
+    clauses = _build_filter_clauses(
+        city=city,
+        q=q,
+        access_type=access_type,
+        indoor=indoor,
+        is_24_7=is_24_7,
+        min_completeness=min_completeness,
+        bbox=bbox,
+    )
+
+    if lat is not None and lng is not None:
+        effective_radius = radius_m or radius or 1000.0
+        nearest = await find_nearest_aeds(
+            session,
+            lat=lat,
+            lng=lng,
+            radius_m=effective_radius,
+            limit=max(limit + offset, 500),
+            is_postgres=settings.is_postgres,
+            extra_clauses=clauses,
+        )
+        serialized = [serialize_aed(aed) for aed, _dist in nearest]
+        if open_now is not None:
+            serialized = [item for item in serialized if item.open_now is open_now]
+        total = len(serialized)
+        return PaginatedAEDResponse(
+            total=total,
+            limit=limit,
+            offset=offset,
+            items=serialized[offset : offset + limit],
+        )
+
+    if open_now is not None:
+        if open_now is True:
+            clauses.append(or_(AED.is_24_7.is_(True), AED.opening_hours.is_not(None)))
+        stmt = (
+            select(AED)
+            .where(*clauses)
+            .order_by(AED.completeness_score.desc(), AED.updated_at.desc())
+        )
+        rows = (await session.execute(stmt)).scalars().all()
+        filtered = [s for s in (serialize_aed(a) for a in rows) if s.open_now is open_now]
+        return PaginatedAEDResponse(
+            total=len(filtered),
+            limit=limit,
+            offset=offset,
+            items=filtered[offset : offset + limit],
+        )
+
+    total_stmt = select(func.count(AED.id)).where(*clauses)
+    total = int((await session.execute(total_stmt)).scalar_one())
+
+    stmt = (
+        select(AED)
+        .where(*clauses)
+        .order_by(AED.completeness_score.desc(), AED.updated_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    rows = (await session.execute(stmt)).scalars().all()
+    return PaginatedAEDResponse(
+        total=total,
+        limit=limit,
+        offset=offset,
+        items=[serialize_aed(a) for a in rows],
+    )
+
+
+@router.get("/nearest", response_model=NearestAEDResponse)
+async def get_nearest_aeds(
+    lat: float = Query(..., ge=-90.0, le=90.0),
+    lng: float = Query(..., ge=-180.0, le=180.0),
+    radius_m: float = Query(default=5000.0, ge=10, le=50000),
+    limit: int = Query(default=25, ge=1, le=200),
+    open_now: bool | None = Query(default=None),
+    is_24_7: bool | None = Query(default=None),
+    access_type: AccessType | None = Query(default=None),
+    indoor: bool | None = Query(default=None),
+    session: AsyncSession = Depends(get_db),
+) -> NearestAEDResponse:
+    clauses = _build_filter_clauses(
+        access_type=access_type,
+        indoor=indoor,
+        is_24_7=is_24_7,
+    )
+    fetch_limit = min(limit * 4, 500) if open_now is not None else limit
+    candidates = await find_nearest_aeds(
+        session,
+        lat=lat,
+        lng=lng,
+        radius_m=radius_m,
+        limit=fetch_limit,
+        is_postgres=settings.is_postgres,
+        extra_clauses=clauses,
+    )
+
+    items: list[AEDNearestRead] = []
+    for aed, dist_m in candidates:
+        base = serialize_aed(aed)
+        if open_now is not None and base.open_now is not open_now:
+            continue
+        items.append(
+            AEDNearestRead(
+                **base.model_dump(),
+                distance_m=dist_m,
+                walking_minutes=walking_minutes(dist_m),
+            )
+        )
+        if len(items) >= limit:
+            break
+
+    return NearestAEDResponse(
+        origin={"lat": round(lat, 6), "lng": round(lng, 6)},
+        radius_m=radius_m,
+        count=len(items),
+        items=items,
+    )
+
+
+@router.get("/{aed_id}", response_model=AEDDetailRead)
+async def get_aed_detail(
+    aed_id: UUID,
+    session: AsyncSession = Depends(get_db),
+) -> AEDDetailRead:
+    aed = (await session.execute(select(AED).where(AED.id == aed_id))).scalar_one_or_none()
+    if aed is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AED record not found")
+
+    base = serialize_aed(aed)
+    provenance = [
+        SourceRecordSummary(
+            id=sr.id,
+            source_name=sr.source_name,
+            source_trust_tier=sr.source_trust_tier,
+            external_id=sr.external_id,
+            ingested_at=ensure_utc(sr.ingested_at) or datetime.now(timezone.utc),
+        )
+        for sr in sorted(
+            aed.source_records,
+            key=lambda r: ensure_utc(r.ingested_at) or datetime.min.replace(tzinfo=timezone.utc),
+            reverse=True,
+        )
+    ]
+    return AEDDetailRead(**base.model_dump(), provenance=provenance)
+
+
+@router.post(
+    "",
+    response_model=AEDSubmitResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def submit_aed(
+    payload: AEDCreate,
+    session: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    raw_record = build_direct_submission_record(payload)
+    action, aed, dist_m = await upsert_single_candidate(
+        session,
+        raw_record,
+        radius_m=settings.DEDUP_RADIUS_M,
+        is_postgres=settings.is_postgres,
+    )
+    await session.commit()
+    await session.refresh(aed, attribute_names=["source_records"])
+
+    normalized_action = "created" if action == "created" else "merged"
+    http_status = status.HTTP_201_CREATED if normalized_action == "created" else status.HTTP_200_OK
+    body = AEDSubmitResponse(
+        action=normalized_action,
+        merged_distance_m=dist_m,
+        aed=serialize_aed(aed),
+    )
+    return JSONResponse(status_code=http_status, content=jsonable_encoder(body))
+
+
+@router.post("/{aed_id}/verify", response_model=AEDRead)
+async def verify_aed(
+    aed_id: UUID,
+    payload: AEDVerifyRequest,
+    session: AsyncSession = Depends(get_db),
+) -> AEDRead:
+    aed = (await session.execute(select(AED).where(AED.id == aed_id))).scalar_one_or_none()
+    if aed is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AED record not found")
+
+    now = datetime.now(timezone.utc)
+    verification = AEDVerification(
+        aed_id=aed.id,
+        action=payload.action,
+        reporter_org=payload.reporter_org,
+        notes=payload.notes,
+        created_at=now,
+    )
+    session.add(verification)
+
+    if payload.action == "confirm_operational":
+        aed.status = "operational"
+    else:
+        aed.status = "out_of_service"
+
+    aed.last_verified_at = now
+    aed.updated_at = now
+    aed.completeness_score = compute_completeness_for_obj(aed, now=now)
+
+    await session.commit()
+    await session.refresh(aed, attribute_names=["source_records"])
+    return serialize_aed(aed)

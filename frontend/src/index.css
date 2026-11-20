@@ -1,0 +1,96 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+:root {
+  --bg-canvas: #ffffff;
+  --bg-page: #f2f5f7;
+  --bg-surface: #f7f9fa;
+  --bg-callout: #edf4fb;
+  --bg-urgent: #fdf2f2;
+  --ink-primary: #1b1b1b;
+  --ink-secondary: #4a5568;
+  --border-hairline: #d5dce2;
+  --border-input: #7a8699;
+  --gov-blue: #0052a5;
+  --gov-blue-dark: #003a75;
+  --gov-blue-hover: #003d7a;
+  --gov-blue-ink: #ffffff;
+  --gov-crimson: #d4213d;
+  --aed-red: #dc2626;
+  --aed-red-hover: #b91c1c;
+  --status-emerald: #059669;
+}
+
+/* Official Polish BIP / gov.pl WCAG AAA High-Contrast Mode */
+html[data-contrast="high"] {
+  --bg-canvas: #000000;
+  --bg-page: #000000;
+  --bg-surface: #111111;
+  --bg-callout: #141414;
+  --bg-urgent: #1a0a0a;
+  --ink-primary: #ffff00;
+  --ink-secondary: #ffffff;
+  --border-hairline: #ffff00;
+  --border-input: #ffff00;
+  --gov-blue: #ffff00;
+  --gov-blue-dark: #d9d900;
+  --gov-blue-hover: #ffe600;
+  --gov-blue-ink: #000000;
+  --gov-crimson: #ffff00;
+  --aed-red: #ff3b3b;
+  --aed-red-hover: #ff1f1f;
+  --status-emerald: #00ff88;
+}
+
+html[data-font-scale="lg"] {
+  font-size: 115%;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    background-color: var(--bg-page);
+    color: var(--ink-primary);
+    font-family: var(--font-sans);
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--gov-blue);
+    outline-offset: 2px;
+  }
+}
+
+html[data-contrast="high"] .maplibregl-canvas {
+  filter: contrast(1.25) grayscale(1);
+}
+
+html[data-contrast="high"] .coat-of-arms {
+  filter: none;
+}
+
+/* gov.pl civic map controls */
+.maplibregl-ctrl-group {
+  border-radius: 3px !important;
+  border: 1px solid var(--border-hairline) !important;
+  box-shadow: none !important;
+  background: var(--bg-canvas) !important;
+}
+
+.maplibregl-ctrl-group button {
+  border-radius: 0 !important;
+}
+
+.maplibregl-ctrl-attrib {
+  background: var(--bg-canvas) !important;
+  border-top: 1px solid var(--border-hairline);
+  border-left: 1px solid var(--border-hairline);
+  font-size: 10px !important;
+  color: var(--ink-secondary) !important;
+}

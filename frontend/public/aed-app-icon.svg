@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Ikona aplikacji AED">
+  <rect width="512" height="512" rx="96" fill="#007A3D" />
+  <!-- White ISO 7010 medical cross in top-right -->
+  <rect x="378" y="60" width="32" height="96" rx="4" fill="#FFFFFF" />
+  <rect x="346" y="92" width="96" height="32" rx="4" fill="#FFFFFF" />
+  <!-- White heart -->
+  <path
+    d="M256 426C256 426 96 320 96 204C96 146 141 104 196 104C228 104 247 120 256 138C265 120 284 104 316 104C371 104 416 146 416 204C416 320 256 426 256 426Z"
+    fill="#FFFFFF"
+  />
+  <!-- Electric defibrillator bolt cutout -->
+  <path
+    d="M274 166L208 264H256L236 354L308 244H258L274 166Z"
+    fill="#007A3D"
+  />
+</svg>

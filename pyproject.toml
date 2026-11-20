@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=69.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "krajowy-rejestr-aed"
+version = "1.0.0"
+description = "Krajowy Rejestr AED — National Polish AED Open Data Hub (dane.gov.pl)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "sqlalchemy[asyncio]>=2.0.35",
+    "asyncpg>=0.30.0",
+    "aiosqlite>=0.20.0",
+    "geoalchemy2>=0.15.0",
+    "shapely>=2.0.0",
+    "alembic>=1.14.0",
+    "httpx>=0.27.0",
+]
+
+[tool.fastapi]
+entrypoint = "main:app"

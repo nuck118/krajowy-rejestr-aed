@@ -1,0 +1,15 @@
+.env
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+backend/.venv/
+.venv/
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+.DS_Store
