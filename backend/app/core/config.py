@@ -13,10 +13,17 @@ def _default_data_dir() -> Path:
 
 
 def _default_sqlite_url() -> str:
-    backend_dir = Path(__file__).resolve().parents[2]
-    target_dir = backend_dir if os.access(backend_dir, os.W_OK) else Path("/tmp")
-    db_path = (target_dir / "aed_registry.db").as_posix()
-    return f"sqlite+aiosqlite:///{db_path}"
+    here = Path(__file__).resolve()
+    for candidate in (here.parents[2], Path.cwd() / "backend"):
+        if (
+            candidate.name == "backend"
+            and (candidate / "pyproject.toml").is_file()
+            and os.access(candidate, os.W_OK)
+        ):
+            db_path = (candidate / "aed_registry.db").as_posix()
+            return f"sqlite+aiosqlite:///{db_path}"
+    fallback_path = (Path("/tmp") / "aed_registry.db").as_posix()
+    return f"sqlite+aiosqlite:///{fallback_path}"
 
 
 class Settings(BaseSettings):

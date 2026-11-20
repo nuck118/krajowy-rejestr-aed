@@ -16,7 +16,18 @@ from app.db.session import async_session_factory, get_db, init_db_schema
 from app.services.ingestion_runner import execute_ingestion_run
 
 logger = logging.getLogger(__name__)
-FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+
+
+def _default_frontend_dist() -> Path:
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        candidate = parent / "frontend" / "dist"
+        if candidate.is_dir():
+            return candidate
+    return Path.cwd() / "frontend" / "dist"
+
+
+FRONTEND_DIST = _default_frontend_dist()
 
 
 async def _auto_seed_if_empty() -> None:
