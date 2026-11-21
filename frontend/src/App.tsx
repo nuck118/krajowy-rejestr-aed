@@ -186,9 +186,9 @@ export function App() {
         <div
           role="alert"
           aria-live="assertive"
-          className="bg-[var(--bg-amber)] border-b border-[var(--border-hairline)] px-4 sm:px-6 py-2.5"
+          className="bg-[var(--bg-amber)] border-b border-[var(--border-hairline)] px-3 sm:px-4 py-2.5"
         >
-          <div className="max-w-[1180px] mx-auto flex items-center justify-between gap-3 text-xs font-medium text-[var(--status-amber)]">
+          <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-3 text-xs font-medium text-[var(--status-amber)]">
             <span>{geoNotice}</span>
             <button
               type="button"

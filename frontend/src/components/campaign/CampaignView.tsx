@@ -102,8 +102,8 @@ export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
   };
 
   return (
-    <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 space-y-6">
-      <div className="bg-[var(--bg-canvas)] border border-[var(--border-hairline)] rounded-[4px] p-5 sm:p-8 space-y-8">
+    <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-5 space-y-5">
+      <div className="bg-[var(--bg-canvas)] border border-[var(--border-hairline)] rounded-[4px] p-4 sm:p-6 space-y-7">
         {/* Header & Breadcrumb */}
         <div className="space-y-3 pb-6 border-b border-[var(--border-hairline)]">
           <nav

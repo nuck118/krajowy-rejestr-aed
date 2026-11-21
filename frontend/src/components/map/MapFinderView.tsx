@@ -283,9 +283,9 @@ export function MapFinderView({
   }, []);
 
   return (
-    <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-5 space-y-5">
       {/* Page Header & Search Panel */}
-      <div className="bg-[var(--bg-canvas)] border border-[var(--border-hairline)] rounded-[4px] p-5 sm:p-6 space-y-3">
+      <div className="bg-[var(--bg-canvas)] border border-[var(--border-hairline)] rounded-[4px] p-4 sm:p-5 space-y-3">
         <nav
           aria-label="Breadcrumb"
           className="text-xs text-[var(--ink-secondary)] flex flex-wrap items-center gap-1.5"
@@ -386,8 +386,8 @@ export function MapFinderView({
       </div>
 
       {/* Two-Column Portal Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-7 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <div className="lg:col-span-8 space-y-5">
           <section
             aria-label={t.mapTitle}
             className="border border-[var(--border-hairline)] rounded-[4px] bg-[var(--bg-canvas)] overflow-hidden"
@@ -461,7 +461,7 @@ export function MapFinderView({
         </div>
 
         {/* Right Sidebar: Nearest Directory + Flat Registry Overview */}
-        <aside className="lg:col-span-5 space-y-6">
+        <aside className="lg:col-span-4 space-y-5">
           <FinderRail
             locale={locale}
             nearestItems={nearestItems}

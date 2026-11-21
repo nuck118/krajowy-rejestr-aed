@@ -42,8 +42,8 @@ export function TopBar({
   return (
     <header className="w-full bg-[var(--bg-canvas)] shrink-0 z-30">
       {/* Band 1: Official gov.pl Utility, Language & Accessibility Strip */}
-      <div className="bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] px-4 sm:px-6 py-1.5">
-        <div className="max-w-[1180px] mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] px-3 sm:px-4 py-1.5">
+        <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2">
             <PolishCoatOfArms className="h-6 w-auto shrink-0" />
             <span className="font-bold text-sm text-[var(--ink-primary)] tracking-tight">
@@ -143,8 +143,8 @@ export function TopBar({
       </div>
 
       {/* Band 2: Official Ministerial Masthead (Clean 1px rules, zero thick highlighters or square boxes) */}
-      <div className="bg-[var(--bg-canvas)] px-4 sm:px-6 py-4 border-b border-[var(--border-hairline)]">
-        <div className="max-w-[1180px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-[var(--bg-canvas)] px-3 sm:px-4 py-4 border-b border-[var(--border-hairline)]">
+        <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => onTabChange("map")}
@@ -183,9 +183,9 @@ export function TopBar({
       {/* Band 3: Classic WordPress Polish Government Blue Navigation Bar */}
       <nav
         aria-label="Primary portal navigation"
-        className="bg-[var(--gov-blue)] border-b border-[var(--border-hairline)] px-4 sm:px-6"
+        className="bg-[var(--gov-blue)] border-b border-[var(--border-hairline)] px-3 sm:px-4"
       >
-        <div className="max-w-[1180px] mx-auto flex items-stretch justify-between gap-2 overflow-x-auto">
+        <div className="max-w-[1440px] mx-auto flex items-stretch justify-between gap-2 overflow-x-auto">
           <div className="flex items-stretch">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;

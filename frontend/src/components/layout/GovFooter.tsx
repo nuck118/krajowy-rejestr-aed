@@ -37,7 +37,7 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
   return (
     <>
       <footer className="mt-10 border-t border-[var(--border-hairline)] bg-[var(--bg-canvas)]">
-        <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-8 space-y-6">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-7 space-y-6">
           <div className="flex items-center gap-3.5 pb-5 border-b border-[var(--border-hairline)]">
             <PolishCoatOfArms className="h-11 w-auto shrink-0" />
             <div>
