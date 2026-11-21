@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiUrl, docsUrl } from "../../api/client";
 import { TRANSLATIONS, type Locale } from "../../i18n/translations";
 import { CloseIcon, ExternalLinkIcon } from "../icons/Icons";
@@ -12,7 +12,27 @@ interface GovFooterProps {
 
 export function GovFooter({ locale, onNavigate }: GovFooterProps) {
   const [showAccessibilityModal, setShowAccessibilityModal] = useState(false);
+  const triggerBtnRef = useRef<HTMLButtonElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const t = TRANSLATIONS[locale];
+
+  useEffect(() => {
+    if (!showAccessibilityModal) return;
+    closeBtnRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowAccessibilityModal(false);
+        triggerBtnRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showAccessibilityModal]);
+
+  const closeModal = () => {
+    setShowAccessibilityModal(false);
+    triggerBtnRef.current?.focus();
+  };
 
   return (
     <>
@@ -63,6 +83,15 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
                     {t.nav.submit}
                   </button>
                 </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate?.("campaign")}
+                    className="hover:underline cursor-pointer text-left"
+                  >
+                    {t.nav.campaign}
+                  </button>
+                </li>
               </ul>
             </div>
 
@@ -87,6 +116,20 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
                   </a>
                 </li>
                 <li>
+                  <a href={apiUrl("/api/v1/standard.xlsx")} className="hover:underline">
+                    {locale === "pl"
+                      ? "Wzorcowy zakres danych AED (.xlsx)"
+                      : "Reference AED Data Standard (.xlsx)"}
+                  </a>
+                </li>
+                <li>
+                  <a href={apiUrl("/api/v1/harvester/dane-gov.xml")} className="hover:underline">
+                    {locale === "pl"
+                      ? "Katalog XML harvestera dane.gov.pl"
+                      : "dane.gov.pl Harvester XML Catalog"}
+                  </a>
+                </li>
+                <li>
                   <a
                     href={docsUrl()}
                     target="_blank"
@@ -107,6 +150,7 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
               <ul className="space-y-1.5 text-xs text-[var(--ink-secondary)]">
                 <li>
                   <button
+                    ref={triggerBtnRef}
                     type="button"
                     onClick={() => setShowAccessibilityModal(true)}
                     className="text-sm text-[var(--gov-blue)] hover:underline cursor-pointer font-medium"
@@ -137,6 +181,9 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="a11y-dialog-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }}
           className="fixed inset-0 z-50 bg-[#000000]/60 flex items-center justify-center p-4"
         >
           <div className="w-full max-w-lg bg-[var(--bg-canvas)] border border-[var(--border-hairline)] rounded-[4px]">
@@ -148,8 +195,9 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
                 {t.footer.a11yTitle}
               </h2>
               <button
+                ref={closeBtnRef}
                 type="button"
-                onClick={() => setShowAccessibilityModal(false)}
+                onClick={closeModal}
                 aria-label={t.dismiss}
                 className="p-1 text-[var(--ink-primary)] hover:text-[var(--gov-blue)] cursor-pointer"
               >
@@ -166,7 +214,7 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
               <div className="pt-2 flex justify-end">
                 <button
                   type="button"
-                  onClick={() => setShowAccessibilityModal(false)}
+                  onClick={closeModal}
                   className="h-9 px-4 rounded-[3px] bg-[var(--gov-blue)] hover:bg-[var(--gov-blue-hover)] text-[var(--gov-blue-ink)] text-sm font-medium cursor-pointer"
                 >
                   {t.dismiss}

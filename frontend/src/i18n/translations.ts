@@ -57,6 +57,8 @@ export const TRANSLATIONS = {
       legendOperational: "AED sprawny",
       legendOutOfService: "AED niesprawny",
       legendOrigin: "Twoja lokalizacja (przeciągnij)",
+      mapA11yHint:
+        "Interaktywna mapa punktów AED. Użytkownicy klawiatury i czytników ekranu mogą wybrać dowolny pobliski defibrylator z dostępnej listy obok mapy.",
       railTitlePrefix: "Najbliższe defibrylatory w pobliżu:",
       railSubtitle: "Posortowane według odległości w promieniu 15 km",
       foundSuffix: "znaleziono",
@@ -129,6 +131,16 @@ export const TRANSLATIONS = {
       reachableNow: "Otwarte i dostępne w tej chwili",
       closedNow: "Obiekt obecnie zamknięty (poza godzinami pracy)",
       reachabilityCheck: "Sprawdź godziny dostępu lub zadzwoń do ochrony obiektu",
+      alertOutOfServiceTitle: "Uwaga: urządzenie zgłoszone jako niesprawne",
+      alertOutOfServiceBody:
+        "Ten defibrylator oznaczono w rejestrze jako niesprawny. W nagłym wypadku wybierz najbliższy sprawny punkt AED z listy.",
+      alertClosedTitle: "Uwaga: obiekt jest obecnie zamknięty",
+      alertClosedBody:
+        "Zgodnie z godzinami otwarcia dostęp do tego urządzenia może być teraz zablokowany (kontekst 3 marca). Wybierz najbliższy AED 24/7 lub w kapsule zewnętrznej.",
+      alertRestrictedTitle: "Uwaga: wymagany kontakt z recepcją lub ochroną",
+      alertRestrictedBody:
+        "Urządzenie znajduje się w strefie o ograniczonym dostępie. Skontaktuj się z ochroną lub recepcją obiektu przed dotarciem na miejsce.",
+      callSecurityBtn: "Zadzwoń do obiektu",
       completenessHeading: "Kompletność danych (standard dane.gov.pl)",
       getDirections: "Wyznacz trasę pieszą",
       verifyButton: "Potwierdź stan lub uzupełnij opis",
@@ -230,6 +242,10 @@ export const TRANSLATIONS = {
       tableHeading: "Podłączone źródła danych i status uzgadniania",
       tableIntro:
         "Każde źródło przechodzi walidację schematu Pydantic v2 oraz przestrzenną deduplikację 25 m z zachowaniem pełnej historii pochodzenia.",
+      standardCalloutTitle: "Wzorcowy zakres danych AED i porównanie źródeł (Misja AED)",
+      standardCalloutBody:
+        "Zobacz pełną macierz zakresu referencyjnego wszystkich zintegrowanych źródeł, specyfikację 18 atrybutów standardu dane.gov.pl (.xlsx) oraz Księgę Znaku kampanii Impuls dla Danych.",
+      standardCalloutBtn: "Otwórz Kampanię i Standard",
       regionLabel: "Obszar OSM",
       syncSuccessPrefix: "Zakończono synchronizację źródła",
       fetched: "pobrano",
@@ -333,10 +349,10 @@ export const TRANSLATIONS = {
       a11yBody:
         "Ministerstwo Cyfryzacji zobowiązuje się zapewnić dostępność serwisu Krajowy Rejestr AED zgodnie z ustawą z dnia 4 kwietnia 2019 r. o dostępności cyfrowej stron internetowych i aplikacji mobilnych podmiotów publicznych.",
       a11yPoints: [
-        "Zgodność ze standardem WCAG 2.1 na poziomie AA oraz trybem kontrastu AAA.",
-        "Pełna obsługa nawigacji klawiaturą z wyraźnym wskaźnikiem fokusu.",
-        "Wbudowane narzędzia dostępności: przełącznik wysokiego kontrastu oraz zmiana rozmiaru tekstu (A / A+).",
-        "Przejrzysta struktura nagłówków, formularzy oraz etykiet dla czytników ekranu.",
+        "Zgodność ze standardem WCAG 2.1 na poziomie AA (kontrast >= 4.5:1) oraz trybem wysokiego kontrastu AAA (>= 10:1).",
+        "Pełna obsługa nawigacji klawiaturą z wyraźnym 3 px wskaźnikiem fokusu (także na granatowym pasku nawigacji) i obsługą klawisza Escape w oknach dialogowych.",
+        "Trzystopniowe powiększanie tekstu w standardzie gov.pl (A 100%, A+ 120%, A++ 140%) oraz wsparcie dla preferencji ograniczonego ruchu (prefers-reduced-motion).",
+        "Komunikaty aria-live dla czytników ekranu, opisane tabele danych (caption, scope) oraz wyraźne ostrzeżenia o fizycznej dostępności AED (kontekst 3 marca).",
       ],
     },
     tiers: {
@@ -411,6 +427,8 @@ export const TRANSLATIONS = {
       legendOperational: "AED operational",
       legendOutOfService: "Out of service",
       legendOrigin: "Your location (draggable)",
+      mapA11yHint:
+        "Interactive AED map. Keyboard and screen-reader users can browse and select any nearby defibrillator from the accessible list beside the map.",
       railTitlePrefix: "Nearest defibrillators near",
       railSubtitle: "Sorted by distance within 15 km",
       foundSuffix: "found",
@@ -483,6 +501,16 @@ export const TRANSLATIONS = {
       reachableNow: "Open and accessible right now",
       closedNow: "Facility currently closed (outside opening hours)",
       reachabilityCheck: "Check access hours or call facility security",
+      alertOutOfServiceTitle: "Warning: device reported out of service",
+      alertOutOfServiceBody:
+        "This defibrillator is currently marked out of service. In an emergency, select the nearest operational AED from the list.",
+      alertClosedTitle: "Warning: facility is currently closed",
+      alertClosedBody:
+        "According to opening hours, access to this unit may currently be locked (March 3 context). Choose the nearest 24/7 or outdoor cabinet AED.",
+      alertRestrictedTitle: "Notice: reception or security access required",
+      alertRestrictedBody:
+        "This device is located in a restricted access zone. Contact facility reception or security before arriving.",
+      callSecurityBtn: "Call facility",
       completenessHeading: "dane.gov.pl Record Completeness",
       getDirections: "Get walking directions",
       verifyButton: "Verify status or add placement details",
@@ -584,6 +612,10 @@ export const TRANSLATIONS = {
       tableHeading: "Connected Data Sources and Reconciliation Status",
       tableIntro:
         "Each source is normalized into the canonical Polish AED schema and deduplicated within a 25-meter radius while preserving full source provenance.",
+      standardCalloutTitle: "Reference AED Data Standard and Source Scope Matrix (Misja AED)",
+      standardCalloutBody:
+        "View the full reference scope comparison across all integrated sources, the 18-field dane.gov.pl standard specification (.xlsx), and the Impulse for Data campaign Brand Book.",
+      standardCalloutBtn: "Open Campaign & Standard",
       regionLabel: "OSM Region",
       syncSuccessPrefix: "Synchronization completed for",
       fetched: "fetched",
@@ -688,10 +720,10 @@ export const TRANSLATIONS = {
       a11yBody:
         "The Ministry of Digitization commits to ensuring accessibility of Krajowy Rejestr AED in accordance with the Act of 4 April 2019 on digital accessibility of public sector websites and mobile applications.",
       a11yPoints: [
-        "Compliance with WCAG 2.1 Level AA and AAA high-contrast mode.",
-        "Full keyboard navigation support with clear visible focus indicators.",
-        "Built-in accessibility tools: high-contrast toggle and text scaling (A / A+).",
-        "Semantic heading structure, form labels, and ARIA attributes.",
+        "Compliance with WCAG 2.1 Level AA (contrast >= 4.5:1) and AAA high-contrast mode (>= 10:1).",
+        "Full keyboard navigation support with a 3 px visible focus indicator (including on the navy navigation bar) and Escape-key dialog handling.",
+        "Three-step gov.pl text scaling (A 100%, A+ 120%, A++ 140%) and prefers-reduced-motion support.",
+        "Live screen-reader announcements (aria-live), semantic data tables (caption, scope), and prominent physical AED reachability warnings (March 3 context).",
       ],
     },
     tiers: {

@@ -192,7 +192,11 @@ export function MapFinderView({
       });
     }
     window.setTimeout(() => {
-      detailCardRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      detailCardRef.current?.scrollIntoView({
+        behavior: reduced ? "auto" : "smooth",
+        block: "nearest",
+      });
     }, 60);
   };
 
@@ -405,6 +409,7 @@ export function MapFinderView({
               <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                 <button
                   type="button"
+                  aria-pressed={pickMode}
                   onClick={() => setPickMode((v) => !v)}
                   className={`h-8 px-2.5 rounded-[3px] text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer border transition-colors ${
                     pickMode

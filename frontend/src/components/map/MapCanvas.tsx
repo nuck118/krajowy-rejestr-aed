@@ -266,7 +266,8 @@ export function MapCanvas({
       try {
         const zoom = await source.getClusterExpansionZoom(clusterId);
         const coords = (features[0].geometry as GeoJSON.Point).coordinates;
-        map.easeTo({ center: [coords[0], coords[1]], zoom });
+        const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+        map.easeTo({ center: [coords[0], coords[1]], zoom, duration: reduced ? 0 : 300 });
       } catch {
         // Ignore transient cluster zoom failures
       }
@@ -355,15 +356,21 @@ export function MapCanvas({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyTarget) return;
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     map.flyTo({
       center: [flyTarget.lng, flyTarget.lat],
       zoom: flyTarget.zoom,
-      duration: 600,
+      duration: reduced ? 0 : 600,
     });
   }, [flyTarget]);
 
   return (
-    <div className="relative w-full h-full bg-[var(--bg-surface)]">
+    <div
+      role="region"
+      aria-label={t.mapTitle}
+      className="relative w-full h-full bg-[var(--bg-surface)]"
+    >
+      <p className="sr-only">{t.mapA11yHint}</p>
       <div ref={containerRef} className="w-full h-full" />
       <div className="pointer-events-none absolute top-3 left-3 bg-[var(--bg-canvas)] border border-[var(--border-hairline)] rounded-[3px] px-2.5 py-1.5 flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--ink-primary)]">
         <span className="flex items-center gap-1.5">

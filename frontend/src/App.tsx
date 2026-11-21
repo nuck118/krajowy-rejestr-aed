@@ -3,7 +3,7 @@ import { CampaignView } from "./components/campaign/CampaignView";
 import { HarvesterView } from "./components/harvester/HarvesterView";
 import { CloseIcon } from "./components/icons/Icons";
 import { GovFooter } from "./components/layout/GovFooter";
-import { TopBar, type AppTab } from "./components/layout/TopBar";
+import { TopBar, type AppTab, type FontScale } from "./components/layout/TopBar";
 import { MapFinderView } from "./components/map/MapFinderView";
 import { SubmitAedView } from "./components/submit/SubmitAedView";
 import { TRANSLATIONS, type Locale } from "./i18n/translations";
@@ -45,11 +45,12 @@ export function App() {
     }
   });
 
-  const [largeText, setLargeText] = useState<boolean>(() => {
+  const [fontScale, setFontScale] = useState<FontScale>(() => {
     try {
-      return localStorage.getItem("aed_wcag_font") === "lg";
+      const saved = localStorage.getItem("aed_wcag_font");
+      return saved === "lg" || saved === "xl" ? saved : "md";
     } catch {
-      return false;
+      return "md";
     }
   });
 
@@ -79,17 +80,17 @@ export function App() {
   }, [highContrast]);
 
   useEffect(() => {
-    if (largeText) {
-      document.documentElement.dataset.fontScale = "lg";
-    } else {
+    if (fontScale === "md") {
       delete document.documentElement.dataset.fontScale;
+    } else {
+      document.documentElement.dataset.fontScale = fontScale;
     }
     try {
-      localStorage.setItem("aed_wcag_font", largeText ? "lg" : "normal");
+      localStorage.setItem("aed_wcag_font", fontScale);
     } catch {
       // Ignore storage failures
     }
-  }, [largeText]);
+  }, [fontScale]);
 
   const handleLocateNearest = () => {
     setActiveTab("map");
@@ -155,7 +156,8 @@ export function App() {
 
   const handleNavigate = (tab: AppTab) => {
     setActiveTab(tab);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
   };
 
   return (
@@ -176,19 +178,23 @@ export function App() {
         isLocating={isLocating}
         highContrast={highContrast}
         onToggleHighContrast={() => setHighContrast((v) => !v)}
-        largeText={largeText}
-        onToggleLargeText={() => setLargeText((v) => !v)}
+        fontScale={fontScale}
+        onFontScaleChange={setFontScale}
       />
 
       {geoNotice && (
-        <div className="bg-[var(--bg-canvas)] border-b border-[var(--border-hairline)] px-4 sm:px-6 py-2">
-          <div className="max-w-[1180px] mx-auto flex items-center justify-between text-xs text-[var(--ink-secondary)]">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="bg-[var(--bg-amber)] border-b border-[var(--border-hairline)] px-4 sm:px-6 py-2.5"
+        >
+          <div className="max-w-[1180px] mx-auto flex items-center justify-between gap-3 text-xs font-medium text-[var(--status-amber)]">
             <span>{geoNotice}</span>
             <button
               type="button"
               onClick={() => setGeoNotice(null)}
               aria-label={t.dismiss}
-              className="p-0.5 text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] cursor-pointer"
+              className="p-1 text-[var(--ink-primary)] hover:text-[var(--gov-blue)] cursor-pointer shrink-0"
             >
               <CloseIcon className="w-3.5 h-3.5" />
             </button>

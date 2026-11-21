@@ -84,7 +84,7 @@ const SOURCE_SCOPE_ROWS = [
 const BRAND_COLORS = [
   { name: "Granat Instytucjonalny dane.gov.pl", hex: "#0052A5", rgb: "0, 82, 165", cmyk: "100, 68, 0, 12", role: "Tarcza sygnetu, nawigacja główna" },
   { name: "Karmazyn Narodowy / Czerwień AED", hex: "#D4213D", rgb: "212, 33, 61", cmyk: "10, 96, 75, 2", role: "Serce AED, belka gov.pl, akcent ratunkowy" },
-  { name: "Szmaragd Potwierdzonej Dostępności", hex: "#059669", rgb: "5, 150, 105", cmyk: "86, 12, 68, 2", role: "Węzły otwartych danych, status 24/7" },
+  { name: "Szmaragd Potwierdzonej Dostępności (WCAG AA)", hex: "#047857", rgb: "4, 120, 87", cmyk: "91, 21, 70, 8", role: "Węzły otwartych danych, status 24/7" },
   { name: "Grafit Typograficzny (WCAG AAA)", hex: "#1B1B1B", rgb: "27, 27, 27", cmyk: "72, 66, 65, 80", role: "Logotyp główny i wersja monochromatyczna" },
 ];
 
@@ -324,14 +324,19 @@ export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
 
           <div className="overflow-x-auto border border-[var(--border-hairline)] rounded-[3px]">
             <table className="w-full text-left border-collapse text-xs">
+              <caption className="sr-only">
+                {isPl
+                  ? "Porównanie zakresu referencyjnego zintegrowanych dysponentów danych"
+                  : "Reference Data Scope Comparison Across Integrated Sources"}
+              </caption>
               <thead>
                 <tr className="bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] text-[var(--ink-primary)]">
-                  <th className="py-2.5 px-3 font-bold">Źródło / Dysponent</th>
-                  <th className="py-2.5 px-3 font-bold">Zasięg</th>
-                  <th className="py-2.5 px-3 font-bold">Format</th>
-                  <th className="py-2.5 px-3 font-bold">Współrzędne i Adres</th>
-                  <th className="py-2.5 px-3 font-bold">Opis miejsca i Dostęp</th>
-                  <th className="py-2.5 px-3 font-bold">Godziny i Status</th>
+                  <th scope="col" className="py-2.5 px-3 font-bold">Źródło / Dysponent</th>
+                  <th scope="col" className="py-2.5 px-3 font-bold">Zasięg</th>
+                  <th scope="col" className="py-2.5 px-3 font-bold">Format</th>
+                  <th scope="col" className="py-2.5 px-3 font-bold">Współrzędne i Adres</th>
+                  <th scope="col" className="py-2.5 px-3 font-bold">Opis miejsca i Dostęp</th>
+                  <th scope="col" className="py-2.5 px-3 font-bold">Godziny i Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-hairline)]">
@@ -370,14 +375,19 @@ export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
 
           <div className="overflow-x-auto border border-[var(--border-hairline)] rounded-[3px]">
             <table className="w-full text-left border-collapse text-xs">
+              <caption className="sr-only">
+                {isPl
+                  ? "Specyfikacja 18 atrybutów kanonicznego rekordu AED"
+                  : "Specification of the 18 Canonical AED Attributes"}
+              </caption>
               <thead>
                 <tr className="bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] text-[var(--ink-primary)]">
-                  <th className="py-2 px-3 font-bold">Lp.</th>
-                  <th className="py-2 px-3 font-bold">Pole techniczne (CSV / GeoJSON)</th>
-                  <th className="py-2 px-3 font-bold">Nazwa atrybutu</th>
-                  <th className="py-2 px-3 font-bold">Typ</th>
-                  <th className="py-2 px-3 font-bold">Wymagalność</th>
-                  <th className="py-2 px-3 font-bold">Waga kompletności</th>
+                  <th scope="col" className="py-2 px-3 font-bold">Lp.</th>
+                  <th scope="col" className="py-2 px-3 font-bold">Pole techniczne (CSV / GeoJSON)</th>
+                  <th scope="col" className="py-2 px-3 font-bold">Nazwa atrybutu</th>
+                  <th scope="col" className="py-2 px-3 font-bold">Typ</th>
+                  <th scope="col" className="py-2 px-3 font-bold">Wymagalność</th>
+                  <th scope="col" className="py-2 px-3 font-bold">Waga kompletności</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-hairline)]">

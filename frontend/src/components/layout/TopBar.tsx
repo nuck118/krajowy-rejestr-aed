@@ -4,6 +4,7 @@ import { ContrastIcon, CrosshairIcon, ExternalLinkIcon } from "../icons/Icons";
 import { PolishCoatOfArms } from "../icons/PolishCoatOfArms";
 
 export type AppTab = "map" | "harvester" | "submit" | "campaign";
+export type FontScale = "md" | "lg" | "xl";
 
 interface TopBarProps {
   locale: Locale;
@@ -14,8 +15,8 @@ interface TopBarProps {
   isLocating: boolean;
   highContrast: boolean;
   onToggleHighContrast: () => void;
-  largeText: boolean;
-  onToggleLargeText: () => void;
+  fontScale: FontScale;
+  onFontScaleChange: (scale: FontScale) => void;
 }
 
 export function TopBar({
@@ -27,8 +28,8 @@ export function TopBar({
   isLocating,
   highContrast,
   onToggleHighContrast,
-  largeText,
-  onToggleLargeText,
+  fontScale,
+  onFontScaleChange,
 }: TopBarProps) {
   const t = TRANSLATIONS[locale];
   const tabs: { id: AppTab; label: string }[] = [
@@ -90,30 +91,28 @@ export function TopBar({
               <span className="hidden sm:inline text-[var(--ink-secondary)] mr-0.5">
                 {t.textSize}
               </span>
-              <button
-                type="button"
-                onClick={() => largeText && onToggleLargeText()}
-                aria-pressed={!largeText}
-                className={`px-1.5 py-0.5 rounded-[2px] font-semibold cursor-pointer ${
-                  !largeText
-                    ? "bg-[var(--gov-blue)] text-[var(--gov-blue-ink)]"
-                    : "text-[var(--ink-primary)] hover:underline"
-                }`}
-              >
-                A
-              </button>
-              <button
-                type="button"
-                onClick={() => !largeText && onToggleLargeText()}
-                aria-pressed={largeText}
-                className={`px-1.5 py-0.5 rounded-[2px] font-semibold cursor-pointer ${
-                  largeText
-                    ? "bg-[var(--gov-blue)] text-[var(--gov-blue-ink)]"
-                    : "text-[var(--ink-primary)] hover:underline"
-                }`}
-              >
-                A+
-              </button>
+              {(
+                [
+                  { id: "md", label: "A", title: "100%" },
+                  { id: "lg", label: "A+", title: "120%" },
+                  { id: "xl", label: "A++", title: "140%" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => onFontScaleChange(opt.id)}
+                  aria-pressed={fontScale === opt.id}
+                  title={opt.title}
+                  className={`px-1.5 py-0.5 rounded-[2px] font-semibold cursor-pointer ${
+                    fontScale === opt.id
+                      ? "bg-[var(--gov-blue)] text-[var(--gov-blue-ink)]"
+                      : "text-[var(--ink-primary)] hover:underline"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
 
             <button
@@ -173,7 +172,7 @@ export function TopBar({
             type="button"
             onClick={onLocateNearest}
             disabled={isLocating}
-            className="h-10 px-4 rounded-[3px] bg-[var(--aed-red)] hover:bg-[var(--aed-red-hover)] disabled:opacity-60 text-[#FFFFFF] text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+            className="h-10 px-4 rounded-[3px] bg-[var(--aed-red)] hover:bg-[var(--aed-red-hover)] disabled:opacity-60 text-[var(--aed-red-ink)] text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
           >
             <CrosshairIcon className="w-4 h-4" />
             <span>{isLocating ? t.locatingGps : t.locateNearest}</span>

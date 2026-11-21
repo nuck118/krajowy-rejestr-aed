@@ -312,9 +312,12 @@ export function AedDetailPanel({
     }
   };
 
+  const phoneHref = meta?.phone ? `tel:${meta.phone.replace(/[^+\d]/g, "")}` : null;
+
   return (
     <section
       aria-label={t.sheetLabel}
+      aria-busy={isLoadingDetail}
       className="border border-[var(--border-hairline)] rounded-[4px] bg-[var(--bg-canvas)] overflow-hidden"
     >
       <div className="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between gap-2 bg-[var(--bg-surface)]">
@@ -373,6 +376,72 @@ export function AedDetailPanel({
           )}
         </div>
 
+        {/* Physical Reachability Banner ("3 marca" context) */}
+        {active.status === "out_of_service" ? (
+          <div
+            role="alert"
+            className="p-3.5 rounded-[3px] border border-[var(--aed-red)] bg-[var(--bg-urgent)] space-y-1"
+          >
+            <div className="text-xs font-bold uppercase tracking-wide text-[var(--aed-red)]">
+              {t.alertOutOfServiceTitle}
+            </div>
+            <p className="text-xs text-[var(--ink-primary)] leading-relaxed">
+              {t.alertOutOfServiceBody}
+            </p>
+          </div>
+        ) : active.open_now === false ? (
+          <div
+            role="alert"
+            className="p-3.5 rounded-[3px] border border-[var(--aed-red)] bg-[var(--bg-urgent)] space-y-1.5"
+          >
+            <div className="text-xs font-bold uppercase tracking-wide text-[var(--aed-red)]">
+              {t.alertClosedTitle}
+            </div>
+            <p className="text-xs text-[var(--ink-primary)] leading-relaxed">
+              {t.alertClosedBody}
+            </p>
+            {phoneHref && meta?.phone && (
+              <a
+                href={phoneHref}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--gov-blue)] hover:underline"
+              >
+                {t.callSecurityBtn}: {meta.phone}
+              </a>
+            )}
+          </div>
+        ) : active.access_type !== "public" ? (
+          <div
+            role="status"
+            className="p-3.5 rounded-[3px] border border-[var(--status-amber)] bg-[var(--bg-amber)] space-y-1.5"
+          >
+            <div className="text-xs font-bold uppercase tracking-wide text-[var(--status-amber)]">
+              {t.alertRestrictedTitle} ({accessLabel})
+            </div>
+            <p className="text-xs text-[var(--ink-primary)] leading-relaxed">
+              {t.alertRestrictedBody}
+            </p>
+            {phoneHref && meta?.phone && (
+              <a
+                href={phoneHref}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--gov-blue)] hover:underline"
+              >
+                {t.callSecurityBtn}: {meta.phone}
+              </a>
+            )}
+          </div>
+        ) : active.open_now === true ? (
+          <div
+            role="status"
+            className="px-3.5 py-2.5 rounded-[3px] border border-[var(--status-emerald)] bg-[var(--bg-surface)] flex flex-wrap items-center justify-between gap-2 text-xs"
+          >
+            <span className="font-bold text-[var(--status-emerald)]">
+              {t.reachableNow}
+              {active.is_24_7 ? " (24/7)" : ""}
+            </span>
+            <span className="text-[var(--ink-secondary)]">{envValue}</span>
+          </div>
+        ) : null}
+
         <div className="border border-[var(--border-hairline)] rounded-[3px] divide-y divide-[var(--border-hairline)] text-sm">
           {metadataRows.map((row, idx) => (
             <div
@@ -410,7 +479,14 @@ export function AedDetailPanel({
               {active.completeness_score}% ({tiers[active.completeness_tier] ?? active.completeness_tier})
             </span>
           </div>
-          <div className="w-full h-2 bg-[var(--border-hairline)] rounded-[2px] overflow-hidden">
+          <div
+            role="progressbar"
+            aria-valuenow={active.completeness_score}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={t.completenessHeading}
+            className="w-full h-2 bg-[var(--border-hairline)] rounded-[2px] overflow-hidden"
+          >
             <div
               className="h-full"
               style={{
@@ -421,7 +497,11 @@ export function AedDetailPanel({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div
+          className={`grid grid-cols-1 ${
+            phoneHref ? "sm:grid-cols-3" : "sm:grid-cols-2"
+          } gap-3 pt-1`}
+        >
           <a
             href={directionsUrl}
             target="_blank"
@@ -431,6 +511,14 @@ export function AedDetailPanel({
             <span>{t.getDirections}</span>
             <ExternalLinkIcon className="w-4 h-4" />
           </a>
+          {phoneHref && (
+            <a
+              href={phoneHref}
+              className="h-10 px-4 rounded-[3px] border border-[var(--status-emerald)] bg-[var(--bg-canvas)] hover:bg-[var(--bg-surface)] text-[var(--status-emerald)] text-sm font-semibold flex items-center justify-center gap-2"
+            >
+              <span>{t.callSecurityBtn}</span>
+            </a>
+          )}
           <button
             type="button"
             onClick={() =>
@@ -449,7 +537,11 @@ export function AedDetailPanel({
         </div>
 
         {feedback && (
-          <div className="p-3 border border-[var(--status-emerald)] rounded-[3px] bg-[var(--bg-surface)] text-xs text-[var(--ink-primary)]">
+          <div
+            role="status"
+            aria-live="polite"
+            className="p-3 border border-[var(--status-emerald)] rounded-[3px] bg-[var(--bg-surface)] text-xs text-[var(--ink-primary)]"
+          >
             {feedback}
           </div>
         )}

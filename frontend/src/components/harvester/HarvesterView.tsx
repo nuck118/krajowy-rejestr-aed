@@ -78,7 +78,10 @@ export function HarvesterView({ locale, onNavigate }: HarvesterViewProps) {
         </div>
 
         {error && (
-          <div className="border border-[var(--aed-red)] rounded-[3px] bg-[var(--bg-urgent)] p-4 flex items-center justify-between gap-4">
+          <div
+            role="alert"
+            className="border border-[var(--aed-red)] rounded-[3px] bg-[var(--bg-urgent)] p-4 flex items-center justify-between gap-4"
+          >
             <div className="text-sm text-[var(--aed-red)]">{error}</div>
             <button
               type="button"
@@ -91,7 +94,11 @@ export function HarvesterView({ locale, onNavigate }: HarvesterViewProps) {
         )}
 
         {loading && !stats && (
-          <div className="border border-[var(--border-hairline)] rounded-[3px] bg-[var(--bg-surface)] p-8 text-center text-sm text-[var(--ink-secondary)]">
+          <div
+            role="status"
+            aria-live="polite"
+            className="border border-[var(--border-hairline)] rounded-[3px] bg-[var(--bg-surface)] p-8 text-center text-sm text-[var(--ink-secondary)]"
+          >
             {t.loading}
           </div>
         )}
@@ -100,6 +107,26 @@ export function HarvesterView({ locale, onNavigate }: HarvesterViewProps) {
           <>
             <MetricStrip locale={locale} stats={stats} />
             <ExportPanel locale={locale} />
+            <section
+              aria-label={t.standardCalloutTitle}
+              className="border border-[var(--border-hairline)] rounded-[3px] bg-[var(--bg-callout)] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <div className="space-y-1">
+                <h2 className="text-sm font-bold text-[var(--ink-primary)]">
+                  {t.standardCalloutTitle}
+                </h2>
+                <p className="text-xs text-[var(--ink-secondary)] max-w-3xl leading-relaxed">
+                  {t.standardCalloutBody}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onNavigate?.("campaign")}
+                className="h-9 px-4 rounded-[3px] bg-[var(--gov-blue)] hover:bg-[var(--gov-blue-hover)] text-[var(--gov-blue-ink)] text-xs font-semibold cursor-pointer shrink-0 self-start sm:self-center"
+              >
+                {t.standardCalloutBtn}
+              </button>
+            </section>
             <ReconciliationTable
               locale={locale}
               sources={stats.sources}

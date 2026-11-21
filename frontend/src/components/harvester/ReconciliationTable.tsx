@@ -110,7 +110,11 @@ export function ReconciliationTable({
       </div>
 
       {lastRun && (
-        <div className="p-3.5 border border-[var(--status-emerald)] rounded-[3px] bg-[var(--bg-surface)] flex flex-wrap items-center justify-between gap-2 text-sm">
+        <div
+          role="status"
+          aria-live="polite"
+          className="p-3.5 border border-[var(--status-emerald)] rounded-[3px] bg-[var(--bg-surface)] flex flex-wrap items-center justify-between gap-2 text-sm"
+        >
           <div className="text-[var(--ink-primary)]">
             {t.syncSuccessPrefix}{" "}
             <strong className="font-mono text-xs">{lastRun.source_name}</strong>:{" "}
@@ -133,24 +137,28 @@ export function ReconciliationTable({
       )}
 
       {actionError && (
-        <div className="p-3 border border-[var(--aed-red)] rounded-[3px] bg-[var(--bg-urgent)] text-sm text-[var(--aed-red)]">
+        <div
+          role="alert"
+          className="p-3 border border-[var(--aed-red)] rounded-[3px] bg-[var(--bg-urgent)] text-sm text-[var(--aed-red)]"
+        >
           {actionError}
         </div>
       )}
 
       <div className="border border-[var(--border-hairline)] rounded-[3px] overflow-x-auto bg-[var(--bg-canvas)]">
         <table className="w-full text-left border-collapse text-sm">
+          <caption className="sr-only">{t.tableHeading}</caption>
           <thead>
             <tr className="border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] text-xs font-semibold text-[var(--ink-secondary)]">
-              <th className="py-3 px-4">{t.colSource}</th>
-              <th className="py-3 px-4">{t.colTrust}</th>
-              <th className="py-3 px-4 text-right">{t.colFetched}</th>
-              <th className="py-3 px-4 text-right">{t.colValid}</th>
-              <th className="py-3 px-4 text-right">{t.colPassRate}</th>
-              <th className="py-3 px-4 text-right">{t.colMerged}</th>
-              <th className="py-3 px-4">{t.colLastSync}</th>
-              <th className="py-3 px-4">{t.colStatus}</th>
-              <th className="py-3 px-4 text-right">{t.colAction}</th>
+              <th scope="col" className="py-3 px-4">{t.colSource}</th>
+              <th scope="col" className="py-3 px-4">{t.colTrust}</th>
+              <th scope="col" className="py-3 px-4 text-right">{t.colFetched}</th>
+              <th scope="col" className="py-3 px-4 text-right">{t.colValid}</th>
+              <th scope="col" className="py-3 px-4 text-right">{t.colPassRate}</th>
+              <th scope="col" className="py-3 px-4 text-right">{t.colMerged}</th>
+              <th scope="col" className="py-3 px-4">{t.colLastSync}</th>
+              <th scope="col" className="py-3 px-4">{t.colStatus}</th>
+              <th scope="col" className="py-3 px-4 text-right">{t.colAction}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-hairline)]">

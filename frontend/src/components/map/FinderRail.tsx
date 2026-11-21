@@ -38,7 +38,11 @@ export function FinderRail({
           </h2>
           <p className="text-xs text-[var(--ink-secondary)]">{t.railSubtitle}</p>
         </div>
-        <span className="px-2.5 py-1 rounded-[3px] bg-[var(--bg-canvas)] border border-[var(--border-hairline)] text-xs font-bold text-[var(--ink-primary)] shrink-0">
+        <span
+          role="status"
+          aria-live="polite"
+          className="px-2.5 py-1 rounded-[3px] bg-[var(--bg-canvas)] border border-[var(--border-hairline)] text-xs font-bold text-[var(--ink-primary)] shrink-0"
+        >
           {nearestItems.length} {t.foundSuffix}
         </span>
       </div>
@@ -111,11 +115,28 @@ export function FinderRail({
             aed.location_description ||
             [aed.street_address, aed.city].filter(Boolean).join(", ") ||
             (fallbackParts.length > 0 ? `AED (${fallbackParts.join(", ")})` : t.defaultAedTitle);
+          const isRestricted = aed.access_type !== "public";
+          const reachabilityBadge =
+            aed.open_now === true
+              ? {
+                  text: locale === "pl" ? "Otwarte teraz" : "Open now",
+                  color: "var(--status-emerald)",
+                  bg: "var(--bg-surface)",
+                }
+              : aed.open_now === false
+                ? {
+                    text: locale === "pl" ? "Zamknięte teraz" : "Closed now",
+                    color: "var(--aed-red)",
+                    bg: "var(--bg-urgent)",
+                  }
+                : null;
           return (
             <button
               key={aed.id}
               type="button"
               onClick={() => onSelectAed(aed.id)}
+              aria-pressed={isSelected}
+              aria-current={isSelected ? "true" : undefined}
               className={`w-full text-left p-4 transition-colors cursor-pointer block ${
                 isSelected
                   ? "bg-[var(--bg-callout)]"
@@ -135,6 +156,7 @@ export function FinderRail({
                   style={{ color: dotColor }}
                 >
                   <span
+                    aria-hidden="true"
                     className="w-2 h-2 rounded-full inline-block"
                     style={{ backgroundColor: dotColor }}
                   />
@@ -149,6 +171,38 @@ export function FinderRail({
               >
                 {displayTitle}
               </p>
+
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-medium">
+                {reachabilityBadge && (
+                  <span
+                    className="px-1.5 py-0.5 rounded-[2px] border"
+                    style={{
+                      color: reachabilityBadge.color,
+                      borderColor: reachabilityBadge.color,
+                      backgroundColor: reachabilityBadge.bg,
+                    }}
+                  >
+                    {reachabilityBadge.text}
+                  </span>
+                )}
+                {isRestricted && (
+                  <span
+                    className="px-1.5 py-0.5 rounded-[2px] border"
+                    style={{
+                      color: "var(--status-amber)",
+                      borderColor: "var(--status-amber)",
+                      backgroundColor: "var(--bg-amber)",
+                    }}
+                  >
+                    {t.accessShort[aed.access_type]}
+                  </span>
+                )}
+                {envShort && (
+                  <span className="px-1.5 py-0.5 rounded-[2px] border border-[var(--border-hairline)] bg-[var(--bg-surface)] text-[var(--ink-secondary)]">
+                    {envShort}
+                  </span>
+                )}
+              </div>
 
               <div className="mt-2 flex items-center justify-between gap-2 text-xs text-[var(--ink-secondary)]">
                 <span className="flex items-center gap-1.5 truncate">
