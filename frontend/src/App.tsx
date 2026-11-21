@@ -28,14 +28,42 @@ export function App() {
   });
 
   const [activeTab, setActiveTab] = useState<AppTab>("map");
-  const [origin, setOrigin] = useState<OriginPoint>({
-    lat: 53.1235,
-    lng: 18.0084,
-    label: "Bydgoszcz",
+  const [origin, setOrigin] = useState<OriginPoint>(() => {
+    try {
+      const saved = localStorage.getItem("aed_last_origin");
+      if (saved) {
+        const parsed = JSON.parse(saved) as OriginPoint;
+        if (
+          typeof parsed.lat === "number" &&
+          typeof parsed.lng === "number" &&
+          typeof parsed.label === "string"
+        ) {
+          return parsed;
+        }
+      }
+    } catch {
+      // Fall back to default origin
+    }
+    return {
+      lat: 53.1235,
+      lng: 18.0084,
+      label: "Bydgoszcz",
+    };
   });
   const [flySeq, setFlySeq] = useState(0);
   const [isLocating, setIsLocating] = useState(false);
   const [geoNotice, setGeoNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "aed_last_origin",
+        JSON.stringify({ lat: origin.lat, lng: origin.lng, label: origin.label })
+      );
+    } catch {
+      // Ignore storage failures
+    }
+  }, [origin.lat, origin.lng, origin.label]);
 
   const [highContrast, setHighContrast] = useState<boolean>(() => {
     try {
@@ -110,6 +138,14 @@ export function App() {
       });
     })
       .then(async (fix) => {
+        setIsLocating(false);
+
+        if (fix.isApproximateIp) {
+          const km = (fix.accuracyMeters / 1000).toFixed(1);
+          setGeoNotice(`${t.geoIpRejectedPrefix} +/- ${km} ${t.geoIpRejectedSuffix}`);
+          return;
+        }
+
         const baseLabel = `GPS (${fix.lat.toFixed(4)}, ${fix.lng.toFixed(4)})`;
         setOrigin({
           lat: fix.lat,
@@ -118,7 +154,6 @@ export function App() {
           accuracyMeters: fix.accuracyMeters,
         });
         setFlySeq((n) => n + 1);
-        setIsLocating(false);
 
         if (fix.accuracyMeters > 400) {
           setGeoNotice(

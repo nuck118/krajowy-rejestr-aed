@@ -195,6 +195,7 @@ export interface BrowserGpsFix {
   lat: number;
   lng: number;
   accuracyMeters: number;
+  isApproximateIp: boolean;
 }
 
 export function acquirePreciseBrowserLocation(
@@ -234,10 +235,12 @@ export function acquirePreciseBrowserLocation(
           if (settled) return;
           settled = true;
           cleanup();
+          const acc = Math.round(pos.coords.accuracy || 5000);
           resolve({
             lat: Number(pos.coords.latitude.toFixed(6)),
             lng: Number(pos.coords.longitude.toFixed(6)),
-            accuracyMeters: Math.round(pos.coords.accuracy || 1000),
+            accuracyMeters: acc,
+            isApproximateIp: acc > 2000,
           });
         },
         () => {
@@ -246,33 +249,40 @@ export function acquirePreciseBrowserLocation(
           cleanup();
           reject(lastErr);
         },
-        { enableHighAccuracy: false, maximumAge: 0, timeout: 8000 }
+        { enableHighAccuracy: false, maximumAge: 0, timeout: 6000 }
       );
     };
 
     watchId = navigator.geolocation.watchPosition(
       (pos) => {
         if (settled) return;
-        const acc = Math.round(pos.coords.accuracy || 500);
+        const acc = Math.round(pos.coords.accuracy || 5000);
         const candidate: BrowserGpsFix = {
           lat: Number(pos.coords.latitude.toFixed(6)),
           lng: Number(pos.coords.longitude.toFixed(6)),
           accuracyMeters: acc,
+          isApproximateIp: acc > 2000,
         };
 
         if (!bestFix || candidate.accuracyMeters < bestFix.accuracyMeters) {
           bestFix = candidate;
-          onInterimFix?.(candidate);
+          // Only update the map early for real GPS/Wi-Fi fixes, never for coarse IP guesses
+          if (candidate.accuracyMeters <= 1000) {
+            onInterimFix?.(candidate);
+          }
         }
 
-        if (candidate.accuracyMeters <= 35) {
+        if (candidate.accuracyMeters <= 50) {
           finishWithBest();
           return;
         }
 
-        if (settleTimer === undefined) {
-          settleTimer = window.setTimeout(finishWithBest, 2800);
+        if (settleTimer !== undefined) {
+          window.clearTimeout(settleTimer);
         }
+        // If the reading is still coarse (>500m), give Wi-Fi/GPS triangulation longer to lock
+        const waitMs = bestFix.accuracyMeters <= 500 ? 2000 : 5500;
+        settleTimer = window.setTimeout(finishWithBest, waitMs);
       },
       (err) => {
         if (settled) return;
@@ -283,13 +293,13 @@ export function acquirePreciseBrowserLocation(
         cleanup();
         fallbackLowAccuracy(err);
       },
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 9000 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
     );
 
     hardTimer = window.setTimeout(() => {
       if (!settled && bestFix) {
         finishWithBest();
       }
-    }, 9500);
+    }, 10500);
   });
 }

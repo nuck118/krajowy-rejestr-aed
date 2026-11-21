@@ -28,6 +28,10 @@ export const TRANSLATIONS = {
     geoCoarsePrefix: "Przeglądarka zwróciła przybliżoną lokalizację sieciową (dokładność",
     geoCoarseSuffix:
       "m). Wpisz dokładny adres ulicy w wyszukiwarce lub kliknij swój budynek bezpośrednio na mapie.",
+    geoIpRejectedPrefix:
+      "Twoje urządzenie nie ma dokładnego sygnału GPS/Wi-Fi: przeglądarka zwróciła tylko przybliżoną lokalizację operatora IP (błąd",
+    geoIpRejectedSuffix:
+      "km). Mapa nie została przesunięta. Wpisz swój adres w wyszukiwarce lub kliknij „Wskaż moją lokalizację na mapie”.",
     mapView: {
       breadcrumbHome: "gov.pl",
       breadcrumbMinistry: "Ministerstwo Cyfryzacji",
@@ -398,6 +402,10 @@ export const TRANSLATIONS = {
     geoCoarsePrefix: "Browser returned an approximate network location (accuracy",
     geoCoarseSuffix:
       "m). Enter your street address in the search bar or click your exact building directly on the map.",
+    geoIpRejectedPrefix:
+      "No accurate GPS/Wi-Fi fix was available: your browser only returned an approximate ISP IP location (error",
+    geoIpRejectedSuffix:
+      "km). The map was not moved. Enter your street address above or click 'Pick my location on map'.",
     mapView: {
       breadcrumbHome: "gov.pl",
       breadcrumbMinistry: "Ministry of Digitization",
