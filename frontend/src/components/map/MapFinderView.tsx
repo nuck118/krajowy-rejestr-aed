@@ -285,7 +285,7 @@ export function MapFinderView({
   return (
     <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-5 space-y-5">
       {/* Page Header & Search Panel */}
-      <div className="bg-[var(--bg-canvas)] border border-[var(--border-hairline)] rounded-[4px] p-4 sm:p-5 space-y-3">
+      <div className="space-y-3">
         <nav
           aria-label="Breadcrumb"
           className="text-xs text-[var(--ink-secondary)] flex flex-wrap items-center gap-1.5"
@@ -306,10 +306,7 @@ export function MapFinderView({
           {t.intro}
         </p>
 
-        <form
-          onSubmit={handleSearchSubmit}
-          className="pt-3 border-t border-[var(--border-hairline)] space-y-4"
-        >
+        <form onSubmit={handleSearchSubmit} className="pt-2 space-y-4">
           <div>
             <label
               htmlFor="aed-location-search"
