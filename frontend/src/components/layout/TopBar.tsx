@@ -41,18 +41,27 @@ export function TopBar({
 
   return (
     <header className="w-full bg-[var(--bg-canvas)] shrink-0 z-30">
-      {/* Band 1: Official gov.pl Utility, Language & Accessibility Strip */}
-      <div className="bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] px-3 sm:px-4 py-1.5">
+      {/* Band 1: Official gov.pl Global Top Bar (.govpl) */}
+      <div className="bg-[var(--bg-canvas)] border-b-2 border-[var(--border-subtle)] px-3 sm:px-4 py-2">
         <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <PolishCoatOfArms className="h-6 w-auto shrink-0" />
-            <span className="font-[var(--font-display)] font-extrabold text-sm text-[var(--ink-primary)] tracking-tight">
-              gov.pl
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onTabChange("map")}
+              className="flex items-center gap-2 text-left cursor-pointer hover:underline"
+            >
+              <PolishCoatOfArms className="h-7 w-auto shrink-0" />
+              <span className="font-[var(--font-display)] font-extrabold text-lg text-[var(--ink-primary)] tracking-tight leading-none">
+                gov.pl
+              </span>
+            </button>
+            <span
+              className="w-[2px] h-6 bg-[var(--gov-crimson)] shrink-0"
+              aria-hidden="true"
+            />
+            <span className="text-[var(--ink-primary)] font-normal text-xs sm:text-sm">
+              {t.serviceName}
             </span>
-            <span className="text-[var(--border-input)] select-none" aria-hidden="true">
-              |
-            </span>
-            <span className="text-[var(--ink-secondary)]">{t.serviceName}</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
@@ -142,27 +151,23 @@ export function TopBar({
         </div>
       </div>
 
-      {/* Band 2: Official Ministerial Masthead (Clean 1px rules, zero thick highlighters or square boxes) */}
-      <div className="bg-[var(--bg-canvas)] px-3 sm:px-4 py-4 border-b border-[var(--border-hairline)]">
+      {/* Band 2: Official gov.pl Ministry Unit Header (.page-header) */}
+      <div className="bg-[var(--bg-canvas)] px-3 sm:px-4 pt-5 pb-3">
         <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => onTabChange("map")}
-            className="flex items-center gap-3.5 text-left cursor-pointer rounded-[2px]"
+            className="flex items-center gap-4 text-left cursor-pointer rounded-[4px] group"
           >
             <PolishCoatOfArms className="h-12 sm:h-14 w-auto shrink-0" />
-            <span
-              className="w-px h-11 bg-[var(--border-hairline)] shrink-0"
-              aria-hidden="true"
-            />
             <span className="flex flex-col">
               <span className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-secondary)]">
                 {t.ministryName}
               </span>
-              <span className="font-[var(--font-display)] text-xl sm:text-2xl font-extrabold tracking-[-0.025em] text-[var(--ink-primary)] leading-tight">
+              <span className="font-[var(--font-display)] text-2xl sm:text-[1.75rem] font-bold tracking-[-0.015em] text-[var(--ink-primary)] group-hover:text-[var(--gov-blue)] leading-tight transition-colors">
                 {t.portalTitle}
               </span>
-              <span className="text-xs sm:text-sm text-[var(--ink-secondary)]">
+              <span className="text-xs sm:text-sm text-[var(--ink-secondary)] mt-0.5">
                 {t.portalSubtitle}
               </span>
             </span>
@@ -172,7 +177,7 @@ export function TopBar({
             type="button"
             onClick={onLocateNearest}
             disabled={isLocating}
-            className="h-10 px-4 rounded-[3px] bg-[var(--aed-red)] hover:bg-[var(--aed-red-hover)] disabled:opacity-60 text-[var(--aed-red-ink)] text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+            className="h-11 px-5 rounded-[4px] bg-[var(--aed-red)] hover:bg-[var(--aed-red-hover)] disabled:opacity-60 text-[var(--aed-red-ink)] text-sm font-bold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
           >
             <CrosshairIcon className="w-4 h-4" />
             <span>{isLocating ? t.locatingGps : t.locateNearest}</span>
@@ -180,13 +185,13 @@ export function TopBar({
         </div>
       </div>
 
-      {/* Band 3: Classic WordPress Polish Government Blue Navigation Bar */}
+      {/* Band 3: Official gov.pl Unit Navigation Bar (.page-header #unit-menu) */}
       <nav
         aria-label="Primary portal navigation"
-        className="bg-[var(--gov-blue)] border-b border-[var(--border-hairline)] px-3 sm:px-4"
+        className="bg-[var(--bg-canvas)] border-b border-[var(--border-subtle)] px-3 sm:px-4"
       >
-        <div className="max-w-[1440px] mx-auto flex items-stretch justify-between gap-2 overflow-x-auto">
-          <div className="flex items-stretch">
+        <div className="max-w-[1440px] mx-auto flex items-stretch justify-between gap-4 overflow-x-auto">
+          <div className="flex items-stretch gap-1 sm:gap-6">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -195,10 +200,10 @@ export function TopBar({
                   type="button"
                   onClick={() => onTabChange(tab.id)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`px-4 py-3 text-sm whitespace-nowrap transition-colors cursor-pointer border-r border-[#FFFFFF]/15 first:border-l first:border-[#FFFFFF]/15 ${
+                  className={`py-3.5 px-2 sm:px-0 text-sm whitespace-nowrap transition-colors cursor-pointer border-b-[3px] ${
                     isActive
-                      ? "bg-[var(--gov-blue-dark)] text-[var(--gov-blue-ink)] font-bold underline underline-offset-4"
-                      : "text-[var(--gov-blue-ink)] hover:bg-[var(--gov-blue-dark)] font-medium"
+                      ? "border-[var(--gov-blue)] text-[var(--ink-primary)] font-bold"
+                      : "border-transparent text-[var(--ink-primary)] hover:border-[var(--gov-blue)] hover:text-[var(--gov-blue)] font-normal"
                   }`}
                 >
                   {tab.label}
@@ -211,7 +216,7 @@ export function TopBar({
             href={docsUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-3 text-xs font-medium text-[var(--gov-blue-ink)] hover:bg-[var(--gov-blue-dark)] whitespace-nowrap"
+            className="hidden sm:inline-flex items-center gap-1.5 py-3.5 text-xs font-semibold text-[var(--gov-blue)] hover:text-[var(--gov-blue-hover)] hover:underline whitespace-nowrap"
           >
             <span>{t.apiDocs}</span>
             <ExternalLinkIcon className="w-3.5 h-3.5" />

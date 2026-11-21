@@ -36,17 +36,26 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
 
   return (
     <>
-      <footer className="mt-10 border-t border-[var(--border-hairline)] bg-[var(--bg-canvas)]">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-7 space-y-6">
-          <div className="flex items-center gap-3.5 pb-5 border-b border-[var(--border-hairline)]">
-            <PolishCoatOfArms className="h-11 w-auto shrink-0" />
-            <div>
-              <div className="text-sm font-bold text-[var(--ink-primary)]">
-                {t.footer.serviceTitle}
+      <footer className="mt-12 border-t-[3px] border-[var(--gov-crimson)] bg-[var(--bg-canvas)]">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[var(--border-hairline)]">
+            <div className="flex items-center gap-3.5">
+              <PolishCoatOfArms className="h-11 w-auto shrink-0" />
+              <span
+                className="w-[2px] h-8 bg-[var(--gov-crimson)] shrink-0"
+                aria-hidden="true"
+              />
+              <div>
+                <div className="text-base font-bold text-[var(--ink-primary)]">
+                  {t.footer.serviceTitle}
+                </div>
+                <div className="text-xs text-[var(--ink-secondary)] mt-0.5">
+                  {t.footer.serviceSubtitle}
+                </div>
               </div>
-              <div className="text-xs text-[var(--ink-secondary)] mt-0.5">
-                {t.footer.serviceSubtitle}
-              </div>
+            </div>
+            <div className="text-xs font-bold text-[var(--ink-primary)]">
+              gov.pl
             </div>
           </div>
 

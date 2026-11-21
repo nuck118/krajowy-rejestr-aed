@@ -2,28 +2,30 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 @theme {
-  --font-display: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-sans: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Atkinson Hyperlegible Next", "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next", "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+/* Official gov.pl Design Language Tokens (WCAG 2.1 AA/AAA verified) */
 :root {
   --bg-canvas: #ffffff;
-  --bg-page: #f2f5f7;
-  --bg-surface: #f7f9fa;
+  --bg-page: #ffffff;
+  --bg-surface: #f1f1f1;
   --bg-callout: #edf4fb;
   --bg-urgent: #fdf2f2;
   --ink-primary: #1b1b1b;
-  --ink-secondary: #4a5568;
-  --border-hairline: #d5dce2;
-  --border-input: #64748b;
+  --ink-secondary: #595959;
+  --border-hairline: #b7b7b7;
+  --border-subtle: #f1f1f1;
+  --border-input: #808893;
   --gov-blue: #0052a5;
-  --gov-blue-dark: #003a75;
-  --gov-blue-hover: #003d7a;
+  --gov-blue-dark: #0452a8;
+  --gov-blue-hover: #006cd7;
   --gov-blue-ink: #ffffff;
-  --gov-crimson: #b91c1c;
-  --aed-red: #b91c1c;
-  --aed-red-hover: #991b1b;
+  --gov-crimson: #d5233f;
+  --aed-red: #d5233f;
+  --aed-red-hover: #a7162d;
   --aed-red-ink: #ffffff;
   --status-emerald: #047857;
   --status-amber: #92400e;
@@ -40,6 +42,7 @@ html[data-contrast="high"] {
   --ink-primary: #ffff00;
   --ink-secondary: #ffffff;
   --border-hairline: #ffff00;
+  --border-subtle: #ffff00;
   --border-input: #ffff00;
   --gov-blue: #ffff00;
   --gov-blue-dark: #e6e600;
@@ -113,15 +116,30 @@ html[data-font-scale="xl"] {
     font-variant-numeric: tabular-nums slashed-zero;
   }
 
-  *:focus-visible {
-    outline: 3px solid var(--gov-blue);
-    outline-offset: 2px;
+  /* Official gov.pl triple-ring accessible focus indicator */
+  :where(a, button, input, textarea, select, summary, iframe, [tabindex]:not([tabindex="-1"])):focus:not(:focus-visible) {
+    outline: none;
   }
 
-  header nav button:focus-visible,
-  header nav a:focus-visible {
-    outline: 3px solid var(--gov-blue-ink);
-    outline-offset: -3px;
+  :where(a, button, input, textarea, select, summary, iframe, [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #0452a8, 0 0 0 4px #ffffff, 0 0 0 6px #0452a8;
+  }
+
+  html[data-contrast="high"] :where(a, button, input, textarea, select, summary, iframe, [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 3px solid #ffff00;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
+@media (forced-colors: active) {
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    border-color: CanvasText;
   }
 }
 
