@@ -7,6 +7,14 @@ import { MapFinderView } from "./components/map/MapFinderView";
 import { SubmitAedView } from "./components/submit/SubmitAedView";
 import { TRANSLATIONS, type Locale } from "./i18n/translations";
 import type { AEDRecord } from "./types/aed";
+import { acquirePreciseBrowserLocation, reverseGeocodeLocation } from "./utils/geo";
+
+export interface OriginPoint {
+  lat: number;
+  lng: number;
+  label: string;
+  accuracyMeters?: number;
+}
 
 export function App() {
   const [locale, setLocale] = useState<Locale>(() => {
@@ -19,7 +27,7 @@ export function App() {
   });
 
   const [activeTab, setActiveTab] = useState<AppTab>("map");
-  const [origin, setOrigin] = useState({
+  const [origin, setOrigin] = useState<OriginPoint>({
     lat: 53.1235,
     lng: 18.0084,
     label: "Bydgoszcz",
@@ -91,26 +99,47 @@ export function App() {
     }
 
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = Number(pos.coords.latitude.toFixed(6));
-        const lng = Number(pos.coords.longitude.toFixed(6));
+    acquirePreciseBrowserLocation((interim) => {
+      setOrigin({
+        lat: interim.lat,
+        lng: interim.lng,
+        label: `GPS (${interim.lat.toFixed(4)}, ${interim.lng.toFixed(4)})`,
+        accuracyMeters: interim.accuracyMeters,
+      });
+    })
+      .then(async (fix) => {
+        const baseLabel = `GPS (${fix.lat.toFixed(4)}, ${fix.lng.toFixed(4)})`;
         setOrigin({
-          lat,
-          lng,
-          label: `GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+          lat: fix.lat,
+          lng: fix.lng,
+          label: baseLabel,
+          accuracyMeters: fix.accuracyMeters,
         });
         setFlySeq((n) => n + 1);
         setIsLocating(false);
-      },
-      (err) => {
+
+        if (fix.accuracyMeters > 400) {
+          setGeoNotice(
+            `${t.geoCoarsePrefix} +/- ${fix.accuracyMeters} ${t.geoCoarseSuffix}`
+          );
+        }
+
+        const rev = await reverseGeocodeLocation(fix.lat, fix.lng);
+        if (rev?.label) {
+          setOrigin((prev) =>
+            Math.abs(prev.lat - fix.lat) < 0.0001 && Math.abs(prev.lng - fix.lng) < 0.0001
+              ? { ...prev, label: rev.label }
+              : prev
+          );
+        }
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
         setGeoNotice(
-          `${t.geoErrorPrefix} ${err.message}. ${t.geoShowingFallback} ${origin.label}.`
+          `${t.geoErrorPrefix} ${msg}. ${t.geoShowingFallback} ${origin.label}.`
         );
         setIsLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
+      });
   };
 
   const handleViewSubmittedOnMap = (aed: AEDRecord) => {

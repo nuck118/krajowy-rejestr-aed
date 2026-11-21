@@ -9,8 +9,11 @@ interface MapCanvasProps {
   selectedId: string | null;
   origin: { lat: number; lng: number };
   flyTarget: { lat: number; lng: number; zoom: number; seq: number } | null;
+  pickMode?: boolean;
   onSelectAed: (id: string) => void;
   onBoundsChange: (bbox: string) => void;
+  onPickOrigin?: (lat: number, lng: number) => void;
+  onCenterChange?: (lat: number, lng: number) => void;
 }
 
 const POSITRON_STYLE_URL =
@@ -83,26 +86,36 @@ export function MapCanvas({
   selectedId,
   origin,
   flyTarget,
+  pickMode = false,
   onSelectAed,
   onBoundsChange,
+  onPickOrigin,
+  onCenterChange,
 }: MapCanvasProps) {
   const t = TRANSLATIONS[locale].mapView;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const originMarkerRef = useRef<maplibregl.Marker | null>(null);
   const readyRef = useRef(false);
   const fallbackAppliedRef = useRef(false);
 
   const aedsRef = useRef(aeds);
   const selectedIdRef = useRef(selectedId);
   const originRef = useRef(origin);
+  const pickModeRef = useRef(pickMode);
   const onSelectRef = useRef(onSelectAed);
   const onBoundsRef = useRef(onBoundsChange);
+  const onPickOriginRef = useRef(onPickOrigin);
+  const onCenterChangeRef = useRef(onCenterChange);
 
   aedsRef.current = aeds;
   selectedIdRef.current = selectedId;
   originRef.current = origin;
+  pickModeRef.current = pickMode;
   onSelectRef.current = onSelectAed;
   onBoundsRef.current = onBoundsChange;
+  onPickOriginRef.current = onPickOrigin;
+  onCenterChangeRef.current = onCenterChange;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -116,6 +129,22 @@ export function MapCanvas({
     });
     mapRef.current = map;
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+    const originMarker = new maplibregl.Marker({
+      color: "#0052A5",
+      draggable: true,
+    })
+      .setLngLat([originRef.current.lng, originRef.current.lat])
+      .addTo(map);
+
+    originMarker.on("dragend", () => {
+      const lngLat = originMarker.getLngLat();
+      onPickOriginRef.current?.(
+        Number(lngLat.lat.toFixed(6)),
+        Number(lngLat.lng.toFixed(6))
+      );
+    });
+    originMarkerRef.current = originMarker;
 
     const addOverlaySourcesAndLayers = () => {
       if (!map.getSource("origin-point")) {
@@ -244,6 +273,7 @@ export function MapCanvas({
     });
 
     map.on("click", "aed-points", (e) => {
+      if (pickModeRef.current) return;
       const feature = e.features?.[0];
       const id = feature?.properties?.id;
       if (typeof id === "string") {
@@ -251,21 +281,31 @@ export function MapCanvas({
       }
     });
 
+    map.on("click", (e) => {
+      if (!pickModeRef.current) return;
+      onPickOriginRef.current?.(
+        Number(e.lngLat.lat.toFixed(6)),
+        Number(e.lngLat.lng.toFixed(6))
+      );
+    });
+
     map.on("mouseenter", "aed-points", () => {
       map.getCanvas().style.cursor = "pointer";
     });
     map.on("mouseleave", "aed-points", () => {
-      map.getCanvas().style.cursor = "";
+      map.getCanvas().style.cursor = pickModeRef.current ? "crosshair" : "";
     });
     map.on("mouseenter", "aed-clusters", () => {
       map.getCanvas().style.cursor = "pointer";
     });
     map.on("mouseleave", "aed-clusters", () => {
-      map.getCanvas().style.cursor = "";
+      map.getCanvas().style.cursor = pickModeRef.current ? "crosshair" : "";
     });
 
     let moveTimer: number | undefined;
     map.on("moveend", () => {
+      const c = map.getCenter();
+      onCenterChangeRef.current?.(Number(c.lat.toFixed(6)), Number(c.lng.toFixed(6)));
       window.clearTimeout(moveTimer);
       moveTimer = window.setTimeout(() => {
         const b = map.getBounds();
@@ -278,10 +318,18 @@ export function MapCanvas({
     return () => {
       window.clearTimeout(moveTimer);
       readyRef.current = false;
+      originMarker.remove();
+      originMarkerRef.current = null;
       map.remove();
       mapRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.getCanvas().style.cursor = pickMode ? "crosshair" : "";
+  }, [pickMode]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -293,6 +341,9 @@ export function MapCanvas({
   }, [aeds, selectedId]);
 
   useEffect(() => {
+    if (originMarkerRef.current) {
+      originMarkerRef.current.setLngLat([origin.lng, origin.lat]);
+    }
     const map = mapRef.current;
     if (!map || !readyRef.current) return;
     const src = map.getSource("origin-point") as maplibregl.GeoJSONSource | undefined;
@@ -314,7 +365,7 @@ export function MapCanvas({
   return (
     <div className="relative w-full h-full bg-[var(--bg-surface)]">
       <div ref={containerRef} className="w-full h-full" />
-      <div className="pointer-events-none absolute top-3 left-3 bg-[var(--bg-canvas)] border border-[var(--border-hairline)] rounded-[3px] px-2.5 py-1.5 flex items-center gap-3 text-[11px] font-mono text-[var(--ink-primary)]">
+      <div className="pointer-events-none absolute top-3 left-3 bg-[var(--bg-canvas)] border border-[var(--border-hairline)] rounded-[3px] px-2.5 py-1.5 flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--ink-primary)]">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-[#DC2626] inline-block" />
           {t.legendOperational}
@@ -322,6 +373,10 @@ export function MapCanvas({
         <span className="flex items-center gap-1.5 text-[var(--ink-secondary)]">
           <span className="w-2.5 h-2.5 rounded-full bg-[#475569] inline-block" />
           {t.legendOutOfService}
+        </span>
+        <span className="flex items-center gap-1.5 text-[var(--gov-blue)]">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#0052A5] inline-block" />
+          {t.legendOrigin}
         </span>
       </div>
     </div>

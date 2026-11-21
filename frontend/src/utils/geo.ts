@@ -1,3 +1,5 @@
+import { apiUrl } from "../api/client";
+
 export function haversineMeters(
   lat1: number,
   lng1: number,
@@ -53,30 +55,79 @@ export const POLISH_CITIES: PolishCityPreset[] = [
   { name: "Kielce", aliases: ["kielce"], lat: 50.8661, lng: 20.6286 },
   { name: "Opole", aliases: ["opole"], lat: 50.6751, lng: 17.9213 },
   { name: "Zielona Góra", aliases: ["zielona gora", "zielona góra"], lat: 51.9356, lng: 15.5062 },
-  { name: "Gorzów Wielkopolski", aliases: ["gorzow", "gorzów"], lat: 52.7325, lng: 15.2369 },
+  { name: "Gorzów Wielkopolski", aliases: ["gorzow", "gorzów", "gorzow wielkopolski", "gorzów wielkopolski"], lat: 52.7325, lng: 15.2369 },
 ];
 
 export function matchPolishCity(query: string): PolishCityPreset | null {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return null;
   for (const city of POLISH_CITIES) {
-    if (city.aliases.some((alias) => alias === normalized || alias.startsWith(normalized))) {
+    if (city.aliases.some((alias) => alias === normalized)) {
       return city;
     }
   }
   return null;
 }
 
+export interface GeocodedLocation {
+  lat: number;
+  lng: number;
+  label: string;
+  street_address?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  place_name?: string | null;
+  isStreetLevel?: boolean;
+}
+
 export async function geocodePolishLocation(
   query: string
-): Promise<{ lat: number; lng: number; label: string } | null> {
-  const cityHit = matchPolishCity(query);
-  if (cityHit) {
-    return { lat: cityHit.lat, lng: cityHit.lng, label: cityHit.name };
-  }
-
+): Promise<GeocodedLocation | null> {
   const trimmed = query.trim();
   if (!trimmed) return null;
+
+  const cityHit = matchPolishCity(trimmed);
+  if (cityHit) {
+    return {
+      lat: cityHit.lat,
+      lng: cityHit.lng,
+      label: cityHit.name,
+      city: cityHit.name,
+      isStreetLevel: false,
+    };
+  }
+
+  try {
+    const resp = await fetch(
+      apiUrl(`/api/v1/aeds/geocode?q=${encodeURIComponent(trimmed)}`),
+      { headers: { Accept: "application/json" } }
+    );
+    if (resp.ok) {
+      const data = (await resp.json()) as {
+        latitude: number;
+        longitude: number;
+        label: string;
+        street_address?: string | null;
+        city?: string | null;
+        postal_code?: string | null;
+        place_name?: string | null;
+      };
+      if (Number.isFinite(data.latitude) && Number.isFinite(data.longitude)) {
+        return {
+          lat: data.latitude,
+          lng: data.longitude,
+          label: data.label,
+          street_address: data.street_address,
+          city: data.city,
+          postal_code: data.postal_code,
+          place_name: data.place_name,
+          isStreetLevel: Boolean(data.street_address || data.place_name),
+        };
+      }
+    }
+  } catch {
+    // Fall back to direct Nominatim if backend geocode endpoint is unreachable
+  }
 
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=pl&limit=1&q=${encodeURIComponent(trimmed)}`;
@@ -93,8 +144,152 @@ export async function geocodePolishLocation(
     const lat = Number(data[0].lat);
     const lng = Number(data[0].lon);
     if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
-    return { lat, lng, label: data[0].display_name };
+    const shortLabel = data[0].display_name
+      .split(",")
+      .slice(0, 3)
+      .map((s) => s.trim())
+      .join(", ");
+    return { lat, lng, label: shortLabel || data[0].display_name, isStreetLevel: true };
   } catch {
     return null;
   }
+}
+
+export async function reverseGeocodeLocation(
+  lat: number,
+  lng: number
+): Promise<GeocodedLocation | null> {
+  try {
+    const resp = await fetch(
+      apiUrl(
+        `/api/v1/aeds/reverse-geocode?lat=${encodeURIComponent(lat.toFixed(6))}&lng=${encodeURIComponent(lng.toFixed(6))}`
+      ),
+      { headers: { Accept: "application/json" } }
+    );
+    if (!resp.ok) return null;
+    const data = (await resp.json()) as {
+      latitude: number;
+      longitude: number;
+      label: string;
+      street_address?: string | null;
+      city?: string | null;
+      postal_code?: string | null;
+      place_name?: string | null;
+    };
+    return {
+      lat: data.latitude,
+      lng: data.longitude,
+      label: data.label,
+      street_address: data.street_address,
+      city: data.city,
+      postal_code: data.postal_code,
+      place_name: data.place_name,
+      isStreetLevel: Boolean(data.street_address || data.place_name),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export interface BrowserGpsFix {
+  lat: number;
+  lng: number;
+  accuracyMeters: number;
+}
+
+export function acquirePreciseBrowserLocation(
+  onInterimFix?: (fix: BrowserGpsFix) => void
+): Promise<BrowserGpsFix> {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      reject(new Error("Geolocation unavailable"));
+      return;
+    }
+
+    let bestFix: BrowserGpsFix | null = null;
+    let settled = false;
+    let watchId: number | null = null;
+    let settleTimer: number | undefined;
+    let hardTimer: number | undefined;
+
+    const cleanup = () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      if (settleTimer !== undefined) window.clearTimeout(settleTimer);
+      if (hardTimer !== undefined) window.clearTimeout(hardTimer);
+    };
+
+    const finishWithBest = () => {
+      if (settled || !bestFix) return;
+      settled = true;
+      cleanup();
+      resolve(bestFix);
+    };
+
+    const fallbackLowAccuracy = (lastErr: GeolocationPositionError) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          resolve({
+            lat: Number(pos.coords.latitude.toFixed(6)),
+            lng: Number(pos.coords.longitude.toFixed(6)),
+            accuracyMeters: Math.round(pos.coords.accuracy || 1000),
+          });
+        },
+        () => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          reject(lastErr);
+        },
+        { enableHighAccuracy: false, maximumAge: 0, timeout: 8000 }
+      );
+    };
+
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (settled) return;
+        const acc = Math.round(pos.coords.accuracy || 500);
+        const candidate: BrowserGpsFix = {
+          lat: Number(pos.coords.latitude.toFixed(6)),
+          lng: Number(pos.coords.longitude.toFixed(6)),
+          accuracyMeters: acc,
+        };
+
+        if (!bestFix || candidate.accuracyMeters < bestFix.accuracyMeters) {
+          bestFix = candidate;
+          onInterimFix?.(candidate);
+        }
+
+        if (candidate.accuracyMeters <= 35) {
+          finishWithBest();
+          return;
+        }
+
+        if (settleTimer === undefined) {
+          settleTimer = window.setTimeout(finishWithBest, 2800);
+        }
+      },
+      (err) => {
+        if (settled) return;
+        if (bestFix) {
+          finishWithBest();
+          return;
+        }
+        cleanup();
+        fallbackLowAccuracy(err);
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 9000 }
+    );
+
+    hardTimer = window.setTimeout(() => {
+      if (!settled && bestFix) {
+        finishWithBest();
+      }
+    }, 9500);
+  });
 }

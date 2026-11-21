@@ -157,3 +157,13 @@ class NearestAEDResponse(BaseModel):
     radius_m: float
     count: int
     items: list[AEDNearestRead]
+
+
+class GeocodeResponse(BaseModel):
+    latitude: float
+    longitude: float
+    label: str
+    street_address: str | None = None
+    city: str | None = None
+    postal_code: str | None = None
+    place_name: str | None = None

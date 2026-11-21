@@ -7,8 +7,12 @@ import type {
   FinderFilters,
   StatsResponse,
 } from "../../types/aed";
-import { geocodePolishLocation, POLISH_CITIES } from "../../utils/geo";
-import { CrosshairIcon, SearchIcon } from "../icons/Icons";
+import {
+  geocodePolishLocation,
+  POLISH_CITIES,
+  reverseGeocodeLocation,
+} from "../../utils/geo";
+import { CrosshairIcon, PinIcon, SearchIcon } from "../icons/Icons";
 import type { AppTab } from "../layout/TopBar";
 import { AedDetailPanel } from "./AedDetailPanel";
 import { FinderRail } from "./FinderRail";
@@ -16,11 +20,16 @@ import { MapCanvas } from "./MapCanvas";
 
 interface MapFinderViewProps {
   locale: Locale;
-  origin: { lat: number; lng: number; label: string };
+  origin: { lat: number; lng: number; label: string; accuracyMeters?: number };
   flySeq: number;
   isLocating: boolean;
   onGeolocate: () => void;
-  onOriginChange: (origin: { lat: number; lng: number; label: string }) => void;
+  onOriginChange: (origin: {
+    lat: number;
+    lng: number;
+    label: string;
+    accuracyMeters?: number;
+  }) => void;
   onNavigate?: (tab: AppTab) => void;
 }
 
@@ -50,6 +59,11 @@ export function MapFinderView({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<StatsResponse | null>(null);
+  const [pickMode, setPickMode] = useState(false);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({
+    lat: origin.lat,
+    lng: origin.lng,
+  });
   const [localFlyTarget, setLocalFlyTarget] = useState<{
     lat: number;
     lng: number;
@@ -183,22 +197,45 @@ export function MapFinderView({
   };
 
   const handleQuickCity = (city: { name: string; lat: number; lng: number }) => {
+    setPickMode(false);
     onOriginChange({ lat: city.lat, lng: city.lng, label: city.name });
     setLocalFlyTarget({ lat: city.lat, lng: city.lng, zoom: 13.5, seq: Date.now() });
     setSelectedAed(null);
   };
+
+  const handleManualPickOrigin = useCallback(
+    async (lat: number, lng: number, shouldFly = false) => {
+      setPickMode(false);
+      const fallbackLabel = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      onOriginChange({ lat, lng, label: fallbackLabel });
+      if (shouldFly) {
+        setLocalFlyTarget({ lat, lng, zoom: 16, seq: Date.now() });
+      }
+      const rev = await reverseGeocodeLocation(lat, lng);
+      if (rev?.label) {
+        onOriginChange({ lat, lng, label: rev.label });
+      }
+    },
+    [onOriginChange]
+  );
 
   const handleSearchSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const query = searchQuery.trim();
     if (!query) return;
 
+    setPickMode(false);
     setIsLoading(true);
     setError(null);
     const geo = await geocodePolishLocation(query);
     if (geo) {
       onOriginChange({ lat: geo.lat, lng: geo.lng, label: geo.label });
-      setLocalFlyTarget({ lat: geo.lat, lng: geo.lng, zoom: 13.8, seq: Date.now() });
+      setLocalFlyTarget({
+        lat: geo.lat,
+        lng: geo.lng,
+        zoom: geo.isStreetLevel ? 16 : 13.8,
+        seq: Date.now(),
+      });
       setSelectedAed(null);
       return;
     }
@@ -351,11 +388,43 @@ export function MapFinderView({
             aria-label={t.mapTitle}
             className="border border-[var(--border-hairline)] rounded-[4px] bg-[var(--bg-canvas)] overflow-hidden"
           >
-            <div className="px-4 py-3 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)]">
-              <h2 className="text-base font-bold text-[var(--ink-primary)]">{t.mapTitle}</h2>
-              <p className="text-xs text-[var(--ink-secondary)]">
-                {t.mapSubtitlePrefix} <strong>{origin.label}</strong>. {t.mapSubtitleSuffix}
-              </p>
+            <div className="px-4 py-3 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div>
+                <h2 className="text-base font-bold text-[var(--ink-primary)]">{t.mapTitle}</h2>
+                <p className="text-xs text-[var(--ink-secondary)]">
+                  {t.mapSubtitlePrefix} <strong>{origin.label}</strong>
+                  {origin.accuracyMeters !== undefined && (
+                    <span>
+                      {" "}
+                      ({t.gpsAccuracyLabel} +/- {origin.accuracyMeters} m)
+                    </span>
+                  )}
+                  . {t.mapSubtitleSuffix}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setPickMode((v) => !v)}
+                  className={`h-8 px-2.5 rounded-[3px] text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer border transition-colors ${
+                    pickMode
+                      ? "bg-[var(--gov-blue)] text-[var(--gov-blue-ink)] border-[var(--gov-blue)]"
+                      : "bg-[var(--bg-canvas)] text-[var(--gov-blue)] border-[var(--border-input)] hover:border-[var(--gov-blue)]"
+                  }`}
+                >
+                  <PinIcon className="w-3.5 h-3.5" />
+                  <span>{pickMode ? t.pickOnMapActive : t.pickOnMapBtn}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void handleManualPickOrigin(mapCenter.lat, mapCenter.lng, false)
+                  }
+                  className="h-8 px-2.5 rounded-[3px] border border-[var(--border-input)] bg-[var(--bg-canvas)] hover:border-[var(--gov-blue)] text-xs font-semibold text-[var(--ink-primary)] cursor-pointer"
+                >
+                  {t.useMapCenterBtn}
+                </button>
+              </div>
             </div>
             <div className="h-[460px] sm:h-[500px] w-full">
               <MapCanvas
@@ -364,8 +433,11 @@ export function MapFinderView({
                 selectedId={selectedId}
                 origin={{ lat: origin.lat, lng: origin.lng }}
                 flyTarget={localFlyTarget}
+                pickMode={pickMode}
                 onSelectAed={handleSelectAed}
                 onBoundsChange={setCurrentBbox}
+                onPickOrigin={(lat, lng) => void handleManualPickOrigin(lat, lng, false)}
+                onCenterChange={(lat, lng) => setMapCenter({ lat, lng })}
               />
             </div>
           </section>

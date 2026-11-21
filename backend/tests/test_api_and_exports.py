@@ -204,3 +204,13 @@ async def test_detail_extra_metadata_and_verify_updates_placement(client: AsyncC
     assert verified["status"] == "operational"
     assert verified["location_description"] == "Parter, główny korytarz przy wejściu od ul. Gdańskiej"
     assert verified["completeness_score"] > prev_score
+
+    geo_coord_resp = await client.get("/api/v1/aeds/geocode?q=53.127833,%2017.997713")
+    assert geo_coord_resp.status_code == 200
+    geo_coord = geo_coord_resp.json()
+    assert geo_coord["latitude"] == 53.127833
+    assert geo_coord["longitude"] == 17.997713
+
+    rev_resp = await client.get("/api/v1/aeds/reverse-geocode?lat=53.127833&lng=17.997713")
+    assert rev_resp.status_code == 200
+    assert rev_resp.json()["latitude"] == 53.127833

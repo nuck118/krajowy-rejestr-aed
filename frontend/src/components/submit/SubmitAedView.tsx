@@ -3,6 +3,7 @@ import { submitAed } from "../../api/client";
 import { TRANSLATIONS, type Locale } from "../../i18n/translations";
 import type { AccessType, AEDRecord, AEDSubmitResponse, AedStatus } from "../../types/aed";
 import { evaluateCompleteness } from "../../utils/completeness";
+import { acquirePreciseBrowserLocation, reverseGeocodeLocation } from "../../utils/geo";
 import { CheckIcon } from "../icons/Icons";
 import type { AppTab } from "../layout/TopBar";
 import { CoordinatePickerMap } from "./CoordinatePickerMap";
@@ -71,18 +72,32 @@ export function SubmitAedView({
     }
     setIsLocating(true);
     setSubmitError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLatitude(pos.coords.latitude.toFixed(6));
-        setLongitude(pos.coords.longitude.toFixed(6));
+    acquirePreciseBrowserLocation((interim) => {
+      setLatitude(interim.lat.toFixed(6));
+      setLongitude(interim.lng.toFixed(6));
+    })
+      .then(async (fix) => {
+        setLatitude(fix.lat.toFixed(6));
+        setLongitude(fix.lng.toFixed(6));
         setIsLocating(false);
-      },
-      (err) => {
-        setSubmitError(err.message);
+
+        const rev = await reverseGeocodeLocation(fix.lat, fix.lng);
+        if (rev) {
+          if (rev.street_address && !streetAddress.trim()) {
+            setStreetAddress(rev.street_address);
+          }
+          if (rev.city) {
+            setCity(rev.city);
+          }
+          if (rev.postal_code && !postalCode.trim()) {
+            setPostalCode(rev.postal_code);
+          }
+        }
+      })
+      .catch((err: unknown) => {
+        setSubmitError(err instanceof Error ? err.message : String(err));
         setIsLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
+      });
   };
 
   const handleSubmit = async (e: FormEvent) => {

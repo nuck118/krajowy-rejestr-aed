@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = _default_sqlite_url()
     DEDUP_RADIUS_M: float = 25.0
     OVERPASS_URL: str = "https://overpass-api.de/api/interpreter"
-    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    CORS_ORIGINS: str = "*"
     DATA_DIR: Path = _default_data_dir()
     AUTO_SEED_ON_EMPTY: bool = True
     ENABLE_REVERSE_GEOCODING: bool = True

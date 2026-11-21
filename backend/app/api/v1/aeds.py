@@ -28,6 +28,7 @@ from app.schemas.aed import (
     AEDRead,
     AEDSubmitResponse,
     AEDVerifyRequest,
+    GeocodeResponse,
     NearestAEDResponse,
     PaginatedAEDResponse,
     SourceRecordSummary,
@@ -41,7 +42,12 @@ from app.services.completeness import (
 from app.services.deduplication import upsert_single_candidate
 from app.services.metadata import extract_source_metadata
 from app.services.opening_hours import is_open_now
-from app.services.reverse_geocode import compose_factual_placement, reverse_geocode_poland
+from app.services.reverse_geocode import (
+    compose_factual_placement,
+    format_geocode_label,
+    forward_geocode_poland,
+    reverse_geocode_poland,
+)
 
 router = APIRouter(prefix="/aeds", tags=["AEDs"])
 
@@ -267,6 +273,52 @@ async def get_nearest_aeds(
         radius_m=radius_m,
         count=len(items),
         items=items,
+    )
+
+
+@router.get("/geocode", response_model=GeocodeResponse)
+async def geocode_polish_query(
+    q: str = Query(..., min_length=2, max_length=250, description="Polish address, street, city, or coordinates"),
+) -> GeocodeResponse:
+    res = await forward_geocode_poland(q)
+    if res is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No matching Polish location found",
+        )
+    return GeocodeResponse(
+        latitude=res.latitude,
+        longitude=res.longitude,
+        label=res.label,
+        street_address=res.street_address,
+        city=res.city,
+        postal_code=res.postal_code,
+        place_name=res.place_name,
+    )
+
+
+@router.get("/reverse-geocode", response_model=GeocodeResponse)
+async def reverse_geocode_point(
+    lat: float = Query(..., ge=POLAND_LAT_MIN, le=POLAND_LAT_MAX),
+    lng: float = Query(..., ge=POLAND_LNG_MIN, le=POLAND_LNG_MAX),
+) -> GeocodeResponse:
+    geo = await reverse_geocode_poland(lat, lng)
+    label = format_geocode_label(
+        place_name=geo.place_name if geo else None,
+        street_address=geo.street_address if geo else None,
+        postal_code=geo.postal_code if geo else None,
+        city=geo.city if geo else None,
+        lat=lat,
+        lng=lng,
+    )
+    return GeocodeResponse(
+        latitude=round(lat, 6),
+        longitude=round(lng, 6),
+        label=label,
+        street_address=geo.street_address if geo else None,
+        city=geo.city if geo else None,
+        postal_code=geo.postal_code if geo else None,
+        place_name=geo.place_name if geo else None,
     )
 
 
