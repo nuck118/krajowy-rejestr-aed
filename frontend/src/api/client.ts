@@ -163,10 +163,32 @@ export async function uploadDatasetPayload(
 }
 
 export async function downloadOpenDataExport(
-  format: "geojson" | "csv" | "jsonld"
+  format: "geojson" | "csv" | "jsonld" | "xlsx" | "xml"
 ): Promise<void> {
-  const filename = `krajowy-rejestr-aed.${format}`;
-  const resp = await fetch(apiUrl(`/api/v1/export.${format}`));
+  const endpointMap: Record<typeof format, { path: string; filename: string }> = {
+    geojson: {
+      path: "/api/v1/export.geojson",
+      filename: "krajowy-rejestr-aed.geojson",
+    },
+    csv: {
+      path: "/api/v1/export.csv",
+      filename: "krajowy-rejestr-aed.csv",
+    },
+    jsonld: {
+      path: "/api/v1/export.jsonld",
+      filename: "krajowy-rejestr-aed.jsonld",
+    },
+    xlsx: {
+      path: "/api/v1/standard.xlsx",
+      filename: "Wzorcowy_Zakres_Danych_AED_dane_gov_pl.xlsx",
+    },
+    xml: {
+      path: "/api/v1/harvester/dane-gov.xml",
+      filename: "krajowy-rejestr-aed-harvester.xml",
+    },
+  };
+  const { path, filename } = endpointMap[format];
+  const resp = await fetch(apiUrl(path));
   if (!resp.ok) {
     throw new ApiError(resp.status, `Export failed with HTTP ${resp.status}`);
   }

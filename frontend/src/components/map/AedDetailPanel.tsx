@@ -158,6 +158,29 @@ export function AedDetailPanel({
       value: accessLabel,
     },
     {
+      key: "reachability",
+      label: t.reachabilityLabel,
+      value: (
+        <span
+          className="font-semibold"
+          style={{
+            color:
+              active.open_now === true
+                ? "var(--status-emerald)"
+                : active.open_now === false
+                  ? "var(--aed-red)"
+                  : "var(--ink-primary)",
+          }}
+        >
+          {active.open_now === true
+            ? t.reachableNow
+            : active.open_now === false
+              ? t.closedNow
+              : t.reachabilityCheck}
+        </span>
+      ),
+    },
+    {
       key: "hours",
       label: t.hoursLabel,
       value: active.opening_hours || (active.is_24_7 ? "24/7" : t.hoursEmpty),

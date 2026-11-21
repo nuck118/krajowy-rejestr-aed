@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 260" width="960" height="260" role="img" aria-label="Impuls dla Danych - Misja AED (dane.gov.pl)">
+  <defs>
+    <style>
+      .kicker { font: 700 16px 'Inter', 'Arial', sans-serif; fill: #D4213D; letter-spacing: 1.2px; }
+      .title { font: 900 52px 'Inter', 'Arial Black', sans-serif; fill: #1B1B1B; letter-spacing: -0.5px; }
+      .sub { font: 700 26px 'Inter', 'Arial', sans-serif; fill: #0052A5; }
+      .slogan { font: 500 17px 'Inter', 'Arial', sans-serif; fill: #4A5568; }
+    </style>
+  </defs>
+
+  <rect width="960" height="260" fill="#FFFFFF" rx="8"/>
+
+  <!-- Emblem Shield (x=30, y=30, 200x200) -->
+  <g transform="translate(30, 30)">
+    <rect x="0" y="0" width="200" height="200" rx="26" fill="#0052A5"/>
+    <rect x="0" y="180" width="200" height="20" rx="8" fill="#D4213D"/>
+
+    <!-- Medical Cross Top-Right -->
+    <rect x="145" y="34" width="30" height="10" rx="2" fill="#FFFFFF"/>
+    <rect x="155" y="24" width="10" height="30" rx="2" fill="#FFFFFF"/>
+
+    <!--AED Heart Center -->
+    <path d="M 95 152
+             C 95 152, 34 112, 34 70
+             C 34 46, 54 32, 74 32
+             C 86 32, 95 40, 95 48
+             C 95 40, 104 32, 116 32
+             C 136 32, 156 46, 156 70
+             C 156 112, 95 152, 95 152 Z"
+          fill="#D4213D" stroke="#FFFFFF" stroke-width="5" stroke-linejoin="round"/>
+
+    <!-- Open Data Impulse / ECG Waveform -->
+    <polyline points="26,102 66,102 82,62 98,136 114,84 126,102 168,102"
+              fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Connected Open Data Nodes -->
+    <circle cx="26" cy="102" r="9" fill="#059669" stroke="#FFFFFF" stroke-width="3.5"/>
+    <circle cx="168" cy="102" r="9" fill="#059669" stroke="#FFFFFF" stroke-width="3.5"/>
+  </g>
+
+  <!-- Campaign Lockup Typography -->
+  <text x="268" y="68" class="kicker">OGÓLNOPOLSKA AKCJA DANE.GOV.PL | MISJA AED</text>
+  <text x="266" y="128" class="title">IMPULS DLA DANYCH</text>
+  <text x="268" y="168" class="sub">Otwórz dane o AED. Ocal cenne minuty życia.</text>
+  <text x="268" y="204" class="slogan">„Zamknięta wiedza nie ratuje życia. Udostępnij lokalizację swojego AED w portalu dane.gov.pl.”</text>
+</svg>

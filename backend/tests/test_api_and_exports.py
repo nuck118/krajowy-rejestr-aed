@@ -119,6 +119,26 @@ async def test_submit_merge_nearest_verify_and_exports(client: AsyncClient) -> N
     assert "@context" in ld_doc
     assert len(ld_doc["@graph"]) == 2
 
+    # Exports: Reference Data Standard (.xlsx) + ETag / 304
+    xlsx_resp = await client.get("/api/v1/standard.xlsx")
+    assert xlsx_resp.status_code == 200
+    assert (
+        xlsx_resp.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    assert "Wzorcowy_Zakres_Danych_AED_dane_gov_pl.xlsx" in xlsx_resp.headers["content-disposition"]
+    assert xlsx_resp.content[:2] == b"PK"
+    xlsx_304 = await client.get(
+        "/api/v1/standard.xlsx", headers={"If-None-Match": xlsx_resp.headers["etag"]}
+    )
+    assert xlsx_304.status_code == 304
+
+    # Exports: dane.gov.pl XML Harvester Feed
+    xml_resp = await client.get("/api/v1/harvester/dane-gov.xml")
+    assert xml_resp.status_code == 200
+    assert "application/xml" in xml_resp.headers["content-type"]
+    assert "krajowy-rejestr-aed-polska" in xml_resp.text
+
     # Live GeoJSON upload endpoint merges overlapping point within 25m
     upload_resp = await client.post(
         "/api/v1/ingest/upload",

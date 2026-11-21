@@ -3,7 +3,7 @@ import { TRANSLATIONS, type Locale } from "../../i18n/translations";
 import { ContrastIcon, CrosshairIcon, ExternalLinkIcon } from "../icons/Icons";
 import { PolishCoatOfArms } from "../icons/PolishCoatOfArms";
 
-export type AppTab = "map" | "harvester" | "submit";
+export type AppTab = "map" | "harvester" | "submit" | "campaign";
 
 interface TopBarProps {
   locale: Locale;
@@ -35,6 +35,7 @@ export function TopBar({
     { id: "map", label: t.nav.map },
     { id: "harvester", label: t.nav.harvester },
     { id: "submit", label: t.nav.submit },
+    { id: "campaign", label: t.nav.campaign },
   ];
 
   return (

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CampaignView } from "./components/campaign/CampaignView";
 import { HarvesterView } from "./components/harvester/HarvesterView";
 import { CloseIcon } from "./components/icons/Icons";
 import { GovFooter } from "./components/layout/GovFooter";
@@ -218,6 +219,9 @@ export function App() {
             onViewOnMap={handleViewSubmittedOnMap}
             onNavigate={handleNavigate}
           />
+        )}
+        {activeTab === "campaign" && (
+          <CampaignView locale={locale} onNavigate={handleNavigate} />
         )}
       </main>
 

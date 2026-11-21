@@ -18,7 +18,7 @@ interface ExportPanelProps {
 }
 
 interface ExportFormatItem {
-  id: "geojson" | "csv" | "jsonld";
+  id: "geojson" | "csv" | "jsonld" | "xlsx" | "xml";
   badge: string;
   label: string;
   description: string;
@@ -57,6 +57,22 @@ export function ExportPanel({ locale }: ExportPanelProps) {
       description: t.formats.jsonld.desc,
       standard: t.formats.jsonld.std,
       path: "/api/v1/export.jsonld",
+    },
+    {
+      id: "xlsx",
+      badge: "XLSX",
+      label: t.formats.xlsx.label,
+      description: t.formats.xlsx.desc,
+      standard: t.formats.xlsx.std,
+      path: "/api/v1/standard.xlsx",
+    },
+    {
+      id: "xml",
+      badge: "XML",
+      label: t.formats.xml.label,
+      description: t.formats.xml.desc,
+      standard: t.formats.xml.std,
+      path: "/api/v1/harvester/dane-gov.xml",
     },
   ];
 
