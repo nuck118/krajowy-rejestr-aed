@@ -38,10 +38,10 @@ export function MetricStrip({ locale, stats }: MetricStripProps) {
     >
       {cards.map((card) => (
         <div key={card.label} className="p-5 space-y-1.5">
-          <div className="text-xs font-semibold text-[var(--ink-secondary)]">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-secondary)]">
             {card.label}
           </div>
-          <div className="text-3xl font-bold tracking-tight text-[var(--ink-primary)]">
+          <div className="font-[var(--font-display)] text-3xl font-extrabold tracking-[-0.025em] tabular-nums text-[var(--ink-primary)]">
             {card.value}
           </div>
           <div className="text-xs text-[var(--ink-secondary)] leading-snug">

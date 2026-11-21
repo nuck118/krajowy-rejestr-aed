@@ -46,7 +46,7 @@ export function TopBar({
         <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2">
             <PolishCoatOfArms className="h-6 w-auto shrink-0" />
-            <span className="font-bold text-sm text-[var(--ink-primary)] tracking-tight">
+            <span className="font-[var(--font-display)] font-extrabold text-sm text-[var(--ink-primary)] tracking-tight">
               gov.pl
             </span>
             <span className="text-[var(--border-input)] select-none" aria-hidden="true">
@@ -159,7 +159,7 @@ export function TopBar({
               <span className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-secondary)]">
                 {t.ministryName}
               </span>
-              <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--ink-primary)] leading-tight">
+              <span className="font-[var(--font-display)] text-xl sm:text-2xl font-extrabold tracking-[-0.025em] text-[var(--ink-primary)] leading-tight">
                 {t.portalTitle}
               </span>
               <span className="text-xs sm:text-sm text-[var(--ink-secondary)]">

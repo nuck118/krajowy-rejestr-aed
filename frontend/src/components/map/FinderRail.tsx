@@ -144,7 +144,7 @@ export function FinderRail({
               }`}
             >
               <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--ink-primary)]">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold tabular-nums text-[var(--ink-primary)]">
                   <span>{formatDistance(aed.distance_m)}</span>
                   <span className="text-[var(--ink-secondary)] font-normal">
                     ({aed.walking_minutes} {t.minWalk})
