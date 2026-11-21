@@ -350,7 +350,6 @@ export const TRANSLATIONS = {
         "Ministerstwo Cyfryzacji zobowiązuje się zapewnić dostępność serwisu Krajowy Rejestr AED zgodnie z ustawą z dnia 4 kwietnia 2019 r. o dostępności cyfrowej stron internetowych i aplikacji mobilnych podmiotów publicznych.",
       a11yPoints: [
         "Zgodność ze standardem WCAG 2.1 na poziomie AA (kontrast >= 4.5:1) oraz trybem wysokiego kontrastu AAA (>= 10:1).",
-        "Krój pisma Atkinson Hyperlegible Next oraz Atkinson Hyperlegible Mono (Braille Institute) zaprojektowany dla osób słabowidzących i z dysleksją, z wyraźnym rozróżnieniem znaków (I/l/1, O/0) i polskimi znakami diakrytycznymi.",
         "Pełna obsługa nawigacji klawiaturą z wyraźnym 3 px wskaźnikiem fokusu (także na granatowym pasku nawigacji) i obsługą klawisza Escape w oknach dialogowych.",
         "Trzystopniowe powiększanie tekstu w standardzie gov.pl (A 100%, A+ 120%, A++ 140%) oraz wsparcie dla preferencji ograniczonego ruchu (prefers-reduced-motion).",
         "Komunikaty aria-live dla czytników ekranu, opisane tabele danych (caption, scope) oraz wyraźne ostrzeżenia o fizycznej dostępności AED (kontekst 3 marca).",
@@ -722,7 +721,6 @@ export const TRANSLATIONS = {
         "The Ministry of Digitization commits to ensuring accessibility of Krajowy Rejestr AED in accordance with the Act of 4 April 2019 on digital accessibility of public sector websites and mobile applications.",
       a11yPoints: [
         "Compliance with WCAG 2.1 Level AA (contrast >= 4.5:1) and AAA high-contrast mode (>= 10:1).",
-        "Braille Institute Atkinson Hyperlegible Next and Atkinson Hyperlegible Mono typefaces designed for low-vision and dyslexic readers, with unmistakable character distinction (I/l/1, O/0) and full Polish diacritics.",
         "Full keyboard navigation support with a 3 px visible focus indicator (including on the navy navigation bar) and Escape-key dialog handling.",
         "Three-step gov.pl text scaling (A 100%, A+ 120%, A++ 140%) and prefers-reduced-motion support.",
         "Live screen-reader announcements (aria-live), semantic data tables (caption, scope), and prominent physical AED reachability warnings (March 3 context).",
