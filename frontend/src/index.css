@@ -2,9 +2,9 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 @theme {
-  --font-display: "Plus Jakarta Sans", "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 :root {
@@ -71,8 +71,10 @@ html[data-font-scale="xl"] {
     background-color: var(--bg-page);
     color: var(--ink-primary);
     font-family: var(--font-sans);
-    line-height: 1.55;
-    font-feature-settings: "kern" 1, "liga" 1;
+    line-height: 1.6;
+    letter-spacing: 0.005em;
+    word-spacing: 0.02em;
+    font-variant-ligatures: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -86,18 +88,18 @@ html[data-font-scale="xl"] {
   }
 
   h1 {
-    letter-spacing: -0.025em;
-    line-height: 1.18;
+    letter-spacing: -0.01em;
+    line-height: 1.22;
   }
 
   h2 {
-    letter-spacing: -0.018em;
-    line-height: 1.25;
+    letter-spacing: -0.005em;
+    line-height: 1.28;
   }
 
   h3 {
-    letter-spacing: -0.012em;
-    line-height: 1.3;
+    letter-spacing: 0;
+    line-height: 1.32;
   }
 
   p {
@@ -108,7 +110,7 @@ html[data-font-scale="xl"] {
   dd,
   code,
   .font-mono {
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums slashed-zero;
   }
 
   *:focus-visible {
