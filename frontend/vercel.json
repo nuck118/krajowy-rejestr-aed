@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://krajowy-rejestr-aed.fastapicloud.dev/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://krajowy-rejestr-aed.fastapicloud.dev/health"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://krajowy-rejestr-aed.fastapicloud.dev/docs"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "https://krajowy-rejestr-aed.fastapicloud.dev/openapi.json"
+    }
+  ]
+}

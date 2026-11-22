@@ -10,8 +10,24 @@ import type {
   StatsResponse,
 } from "../types/aed";
 
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+const DEFAULT_PROD_API_BASE = "https://krajowy-rejestr-aed.fastapicloud.dev";
+
+function resolveApiBase(): string {
+  const raw = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+  if (raw) {
+    const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    return withProtocol.replace(/\/+$/, "");
+  }
+  if (
+    typeof window !== "undefined" &&
+    !["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname)
+  ) {
+    return DEFAULT_PROD_API_BASE;
+  }
+  return "";
+}
+
+const API_BASE = resolveApiBase();
 
 export function apiUrl(path: string): string {
   const normalized = path.startsWith("/") ? path : `/${path}`;

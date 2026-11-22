@@ -70,13 +70,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_cors_origins = settings.cors_origin_list or ["*"]
+_is_wildcard_cors = "*" in _cors_origins
+
 app.add_middleware(MCODCoreMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origin_list or ["*"],
-    allow_credentials=True,
+    allow_origins=["*"] if _is_wildcard_cors else _cors_origins,
+    allow_origin_regex=None if _is_wildcard_cors else r"https://.*\.vercel\.app",
+    allow_credentials=not _is_wildcard_cors,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["ETag", "X-API-Version", "X-Total-Count", "Content-Disposition"],
 )
 
 app.include_router(api_router)
