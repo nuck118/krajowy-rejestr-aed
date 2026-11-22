@@ -188,7 +188,7 @@ async def _execute_connector(
                 records=fetch_result.records,
                 run_id=run.id,
                 radius_m=settings.DEDUP_RADIUS_M,
-                is_postgres=settings.is_postgres,
+                is_postgres=settings.use_postgis,
             )
         else:
             inserted = 0
@@ -198,7 +198,7 @@ async def _execute_connector(
                     session,
                     record,
                     radius_m=settings.DEDUP_RADIUS_M,
-                    is_postgres=settings.is_postgres,
+                    is_postgres=settings.use_postgis,
                     ingestion_run_id=run.id,
                 )
                 if action == "created":

@@ -724,7 +724,7 @@ async def get_mcod_cluster_health(
     return {
         "status": "green",
         "api_version": settings.MCOD_API_VERSION,
-        "database_dialect": "postgresql+postgis" if settings.is_postgres else "sqlite+spatial",
+        "database_dialect": settings.database_dialect,
         "slow_sql_logging_enabled": settings.SLOW_SQL_LOGGING_ENABLED,
         "slow_sql_threshold_seconds": settings.SLOW_SQL_THRESHOLD_SECONDS,
         "slow_sql_total_detected": mcod_metrics.slow_sql_total,

@@ -1,8 +1,11 @@
+import logging
 from collections.abc import AsyncGenerator
-from sqlalchemy import event, text
+from sqlalchemy import Text, event, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 engine_kwargs: dict = {"echo": False, "future": True}
 if settings.is_postgres:
@@ -34,9 +37,25 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db_schema() -> None:
-    from app.db.models import Base
+    from app.db.models import AED, Base
 
     async with engine.begin() as conn:
         if settings.is_postgres:
-            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+            if settings.USE_POSTGIS is False:
+                settings.set_postgis_available(False)
+            else:
+                try:
+                    async with conn.begin_nested():
+                        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+                    settings.set_postgis_available(True)
+                except Exception as exc:
+                    logger.warning(
+                        "PostGIS extension unavailable on PostgreSQL (%s); using indexed lat/lng + Haversine fallback.",
+                        exc,
+                    )
+                    settings.set_postgis_available(False)
+
+            if not settings.use_postgis:
+                AED.__table__.c.geom.type = Text()
+
         await conn.run_sync(Base.metadata.create_all)

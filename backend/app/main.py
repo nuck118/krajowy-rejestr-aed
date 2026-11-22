@@ -115,12 +115,15 @@ async def prometheus_metrics_root(session: AsyncSession = Depends(get_db)) -> Re
 async def health_check(session: AsyncSession = Depends(get_db)) -> dict[str, object]:
     await session.execute(text("SELECT 1"))
     postgis_active = False
-    if settings.is_postgres:
-        ver = (await session.execute(text("SELECT PostGIS_Version()"))).scalar_one_or_none()
-        postgis_active = bool(ver)
+    if settings.use_postgis:
+        try:
+            ver = (await session.execute(text("SELECT PostGIS_Version()"))).scalar_one_or_none()
+            postgis_active = bool(ver)
+        except Exception:
+            postgis_active = False
     return {
         "status": "ok",
-        "database_dialect": "postgresql+postgis" if settings.is_postgres else "sqlite+spatial",
+        "database_dialect": settings.database_dialect,
         "postgis": postgis_active,
         "mcod_api_version": settings.MCOD_API_VERSION,
         "slow_sql_logging_enabled": settings.SLOW_SQL_LOGGING_ENABLED,

@@ -174,7 +174,7 @@ def _build_filter_clauses(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="bbox coordinates must be numeric",
             ) from exc
-        clauses.append(filter_bbox_clause(min_lng, min_lat, max_lng, max_lat, settings.is_postgres))
+        clauses.append(filter_bbox_clause(min_lng, min_lat, max_lng, max_lat, settings.use_postgis))
     return clauses
 
 
@@ -220,7 +220,7 @@ async def list_aeds(
             lng=lng,
             radius_m=effective_radius,
             limit=max(limit + offset, 500),
-            is_postgres=settings.is_postgres,
+            is_postgres=settings.use_postgis,
             extra_clauses=clauses,
         )
         aed_objs = [aed for aed, _dist in nearest]
@@ -335,7 +335,7 @@ async def get_nearest_aeds(
         lng=lng,
         radius_m=radius_m,
         limit=fetch_limit,
-        is_postgres=settings.is_postgres,
+        is_postgres=settings.use_postgis,
         extra_clauses=clauses,
     )
 
@@ -541,7 +541,7 @@ async def submit_aed(
         session,
         raw_record,
         radius_m=settings.DEDUP_RADIUS_M,
-        is_postgres=settings.is_postgres,
+        is_postgres=settings.use_postgis,
     )
     await session.commit()
     await session.refresh(aed, attribute_names=["source_records"])

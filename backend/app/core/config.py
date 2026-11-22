@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from pydantic import PrivateAttr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -51,10 +52,32 @@ class Settings(BaseSettings):
     DANE_GOV_API_BASE_URL: str = "https://api.dane.gov.pl/1.4"
     ENABLE_DANE_GOV_LIVE_DISCOVERY: bool = False
     INSTITUTION_REGON: str = "00000012345678"
+    USE_POSTGIS: bool | None = None
+
+    _postgis_available: bool = PrivateAttr(default=False)
 
     @property
     def is_postgres(self) -> bool:
         return self.DATABASE_URL.startswith("postgresql")
+
+    @property
+    def use_postgis(self) -> bool:
+        if not self.is_postgres:
+            return False
+        if self.USE_POSTGIS is not None:
+            return self.USE_POSTGIS
+        return self._postgis_available
+
+    @property
+    def database_dialect(self) -> str:
+        if self.use_postgis:
+            return "postgresql+postgis"
+        if self.is_postgres:
+            return "postgresql+spatial"
+        return "sqlite+spatial"
+
+    def set_postgis_available(self, available: bool) -> None:
+        self._postgis_available = available
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -68,7 +68,7 @@ async def generate_geojson_bytes(
     clauses = _build_export_clauses(city, min_completeness)
 
     features: list[dict[str, Any]] = []
-    if settings.is_postgres:
+    if settings.use_postgis:
         stmt = (
             select(AED, func.ST_AsGeoJSON(AED.geom))
             .options(lazyload(AED.source_records))
