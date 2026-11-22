@@ -88,3 +88,26 @@ CREATE TABLE IF NOT EXISTS aed_verifications (
 );
 
 CREATE INDEX IF NOT EXISTS idx_aed_verifications_aed_id ON aed_verifications (aed_id, created_at DESC);
+
+-- 5. MCOD v2.63.0 AED & Dataset Likes (OTD-3096..OTD-3184)
+CREATE TABLE IF NOT EXISTS aed_likes (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    aed_id     UUID NOT NULL REFERENCES aeds(id) ON DELETE CASCADE,
+    user_ident VARCHAR(128) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_aed_like_user UNIQUE (aed_id, user_ident)
+);
+
+CREATE INDEX IF NOT EXISTS idx_aed_likes_aed_id ON aed_likes (aed_id);
+CREATE INDEX IF NOT EXISTS idx_aed_likes_user_ident ON aed_likes (user_ident);
+
+CREATE TABLE IF NOT EXISTS dataset_likes (
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    dataset_ext_ident VARCHAR(100) NOT NULL,
+    user_ident        VARCHAR(128) NOT NULL,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_dataset_like_user UNIQUE (dataset_ext_ident, user_ident)
+);
+
+CREATE INDEX IF NOT EXISTS idx_dataset_likes_ext_ident ON dataset_likes (dataset_ext_ident);
+CREATE INDEX IF NOT EXISTS idx_dataset_likes_user_ident ON dataset_likes (user_ident);

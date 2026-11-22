@@ -2,10 +2,10 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -15,8 +15,9 @@ from app.core.constants import (
     POLAND_LNG_MAX,
     POLAND_LNG_MIN,
 )
+from app.core.mcod_middleware import resolve_user_ident
 from app.connectors.direct_submission import build_direct_submission_record
-from app.db.models import AED, AEDVerification
+from app.db.models import AED, AEDLike, AEDVerification
 from app.db.session import get_db
 from app.db.spatial import filter_bbox_clause, find_nearest_aeds, walking_minutes
 from app.schemas.aed import (
@@ -29,6 +30,7 @@ from app.schemas.aed import (
     AEDSubmitResponse,
     AEDVerifyRequest,
     GeocodeResponse,
+    LikeStatusResponse,
     NearestAEDResponse,
     PaginatedAEDResponse,
     SourceRecordSummary,
@@ -65,7 +67,12 @@ def _ordered_sources(aed: AED) -> list[str]:
     return ordered
 
 
-def serialize_aed(aed: AED) -> AEDRead:
+def serialize_aed(
+    aed: AED,
+    *,
+    likes_count: int = 0,
+    is_liked_by_current_user: bool = False,
+) -> AEDRead:
     return AEDRead(
         id=aed.id,
         latitude=aed.latitude,
@@ -86,9 +93,41 @@ def serialize_aed(aed: AED) -> AEDRead:
         primary_source=aed.primary_source,
         sources=_ordered_sources(aed),
         open_now=is_open_now(aed.opening_hours, aed.is_24_7),
+        likes_count=likes_count,
+        is_liked_by_current_user=is_liked_by_current_user,
         created_at=ensure_utc(aed.created_at) or datetime.now(timezone.utc),
         updated_at=ensure_utc(aed.updated_at) or datetime.now(timezone.utc),
     )
+
+
+async def _fetch_likes_maps(
+    session: AsyncSession,
+    aed_ids: list[UUID],
+    user_ident: str | None = None,
+) -> tuple[dict[UUID, int], set[UUID]]:
+    if not aed_ids:
+        return {}, set()
+    counts_rows = (
+        await session.execute(
+            select(AEDLike.aed_id, func.count(AEDLike.id))
+            .where(AEDLike.aed_id.in_(aed_ids))
+            .group_by(AEDLike.aed_id)
+        )
+    ).all()
+    counts_map: dict[UUID, int] = {row[0]: int(row[1]) for row in counts_rows}
+
+    liked_set: set[UUID] = set()
+    if user_ident:
+        liked_rows = (
+            await session.execute(
+                select(AEDLike.aed_id).where(
+                    AEDLike.aed_id.in_(aed_ids),
+                    AEDLike.user_ident == user_ident,
+                )
+            )
+        ).scalars().all()
+        liked_set = set(liked_rows)
+    return counts_map, liked_set
 
 
 def _build_filter_clauses(
@@ -141,6 +180,7 @@ def _build_filter_clauses(
 
 @router.get("", response_model=PaginatedAEDResponse)
 async def list_aeds(
+    request: Request,
     city: str | None = Query(default=None),
     q: str | None = Query(default=None, description="Substring search in placement, street, or city"),
     access_type: AccessType | None = Query(default=None),
@@ -153,10 +193,15 @@ async def list_aeds(
     lng: float | None = Query(default=None, ge=-180.0, le=180.0),
     radius: float | None = Query(default=None, ge=10, le=100_000, description="Radius in meters (alias)"),
     radius_m: float | None = Query(default=None, ge=10, le=100_000, description="Radius in meters"),
+    sort: str | None = Query(
+        default=None,
+        description="Sort field (e.g. -likes_count, likes_count, -completeness_score, completeness_score)",
+    ),
     limit: int = Query(default=100, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_db),
 ) -> PaginatedAEDResponse:
+    user_ident = resolve_user_ident(request)
     clauses = _build_filter_clauses(
         city=city,
         q=q,
@@ -178,9 +223,22 @@ async def list_aeds(
             is_postgres=settings.is_postgres,
             extra_clauses=clauses,
         )
-        serialized = [serialize_aed(aed) for aed, _dist in nearest]
+        aed_objs = [aed for aed, _dist in nearest]
+        counts_map, liked_set = await _fetch_likes_maps(
+            session, [a.id for a in aed_objs], user_ident
+        )
+        serialized = [
+            serialize_aed(
+                aed,
+                likes_count=counts_map.get(aed.id, 0),
+                is_liked_by_current_user=aed.id in liked_set,
+            )
+            for aed in aed_objs
+        ]
         if open_now is not None:
             serialized = [item for item in serialized if item.open_now is open_now]
+        if sort in ("likes_count", "-likes_count"):
+            serialized.sort(key=lambda x: x.likes_count, reverse=sort.startswith("-"))
         total = len(serialized)
         return PaginatedAEDResponse(
             total=total,
@@ -189,7 +247,7 @@ async def list_aeds(
             items=serialized[offset : offset + limit],
         )
 
-    if open_now is not None:
+    if open_now is not None or sort in ("likes_count", "-likes_count"):
         if open_now is True:
             clauses.append(or_(AED.is_24_7.is_(True), AED.opening_hours.is_not(None)))
         stmt = (
@@ -197,8 +255,25 @@ async def list_aeds(
             .where(*clauses)
             .order_by(AED.completeness_score.desc(), AED.updated_at.desc())
         )
-        rows = (await session.execute(stmt)).scalars().all()
-        filtered = [s for s in (serialize_aed(a) for a in rows) if s.open_now is open_now]
+        rows = list((await session.execute(stmt)).scalars().all())
+        counts_map, liked_set = await _fetch_likes_maps(
+            session, [a.id for a in rows], user_ident
+        )
+        filtered = [
+            serialize_aed(
+                a,
+                likes_count=counts_map.get(a.id, 0),
+                is_liked_by_current_user=a.id in liked_set,
+            )
+            for a in rows
+        ]
+        if open_now is not None:
+            filtered = [s for s in filtered if s.open_now is open_now]
+        if sort in ("likes_count", "-likes_count"):
+            filtered.sort(
+                key=lambda x: (x.likes_count, x.completeness_score),
+                reverse=sort.startswith("-"),
+            )
         return PaginatedAEDResponse(
             total=len(filtered),
             limit=limit,
@@ -209,19 +284,30 @@ async def list_aeds(
     total_stmt = select(func.count(AED.id)).where(*clauses)
     total = int((await session.execute(total_stmt)).scalar_one())
 
+    order_col = AED.completeness_score.asc() if sort == "completeness_score" else AED.completeness_score.desc()
     stmt = (
         select(AED)
         .where(*clauses)
-        .order_by(AED.completeness_score.desc(), AED.updated_at.desc())
+        .order_by(order_col, AED.updated_at.desc())
         .limit(limit)
         .offset(offset)
     )
-    rows = (await session.execute(stmt)).scalars().all()
+    rows = list((await session.execute(stmt)).scalars().all())
+    counts_map, liked_set = await _fetch_likes_maps(
+        session, [a.id for a in rows], user_ident
+    )
     return PaginatedAEDResponse(
         total=total,
         limit=limit,
         offset=offset,
-        items=[serialize_aed(a) for a in rows],
+        items=[
+            serialize_aed(
+                a,
+                likes_count=counts_map.get(a.id, 0),
+                is_liked_by_current_user=a.id in liked_set,
+            )
+            for a in rows
+        ],
     )
 
 
@@ -324,6 +410,7 @@ async def reverse_geocode_point(
 
 @router.get("/{aed_id}", response_model=AEDDetailRead)
 async def get_aed_detail(
+    request: Request,
     aed_id: UUID,
     session: AsyncSession = Depends(get_db),
 ) -> AEDDetailRead:
@@ -364,7 +451,13 @@ async def get_aed_detail(
                 await session.commit()
                 await session.refresh(aed, attribute_names=["source_records"])
 
-    base = serialize_aed(aed)
+    user_ident = resolve_user_ident(request)
+    counts_map, liked_set = await _fetch_likes_maps(session, [aed.id], user_ident)
+    base = serialize_aed(
+        aed,
+        likes_count=counts_map.get(aed.id, 0),
+        is_liked_by_current_user=aed.id in liked_set,
+    )
     provenance = [
         SourceRecordSummary(
             id=sr.id,
@@ -384,6 +477,54 @@ async def get_aed_detail(
         provenance=provenance,
         extra_metadata=AEDExtraMetadata(**meta_dict),
     )
+
+
+@router.post("/{aed_id}/likes", response_model=LikeStatusResponse, status_code=status.HTTP_201_CREATED)
+async def add_aed_like(
+    request: Request,
+    aed_id: UUID,
+    session: AsyncSession = Depends(get_db),
+) -> LikeStatusResponse:
+    """Adds a user like for an AED record (MCOD v2.63.0 OTD-3100)."""
+    aed = (await session.execute(select(AED).where(AED.id == aed_id))).scalar_one_or_none()
+    if aed is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AED record not found")
+
+    user_ident = resolve_user_ident(request)
+    existing = (
+        await session.execute(
+            select(AEDLike).where(AEDLike.aed_id == aed.id, AEDLike.user_ident == user_ident)
+        )
+    ).scalar_one_or_none()
+    if existing is None:
+        session.add(AEDLike(aed_id=aed.id, user_ident=user_ident))
+        await session.commit()
+
+    counts_map, liked_set = await _fetch_likes_maps(session, [aed.id], user_ident)
+    return LikeStatusResponse(
+        id=str(aed.id),
+        likes_count=counts_map.get(aed.id, 0),
+        is_liked_by_current_user=aed.id in liked_set,
+    )
+
+
+@router.delete("/{aed_id}/likes", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_aed_like(
+    request: Request,
+    aed_id: UUID,
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Removes a user like for an AED record (MCOD v2.63.0 OTD-3101)."""
+    aed = (await session.execute(select(AED).where(AED.id == aed_id))).scalar_one_or_none()
+    if aed is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AED record not found")
+
+    user_ident = resolve_user_ident(request)
+    await session.execute(
+        delete(AEDLike).where(AEDLike.aed_id == aed.id, AEDLike.user_ident == user_ident)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post(

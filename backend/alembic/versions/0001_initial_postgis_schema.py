@@ -109,8 +109,32 @@ def upgrade() -> None:
     )
     op.create_index("idx_aed_verifications_aed_id", "aed_verifications", ["aed_id", "created_at"])
 
+    op.create_table(
+        "aed_likes",
+        sa.Column("id", sa.Uuid(as_uuid=True), primary_key=True),
+        sa.Column("aed_id", sa.Uuid(as_uuid=True), sa.ForeignKey("aeds.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("user_ident", sa.String(length=128), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.UniqueConstraint("aed_id", "user_ident", name="uq_aed_like_user"),
+    )
+    op.create_index("idx_aed_likes_aed_id", "aed_likes", ["aed_id"])
+    op.create_index("idx_aed_likes_user_ident", "aed_likes", ["user_ident"])
+
+    op.create_table(
+        "dataset_likes",
+        sa.Column("id", sa.Uuid(as_uuid=True), primary_key=True),
+        sa.Column("dataset_ext_ident", sa.String(length=100), nullable=False),
+        sa.Column("user_ident", sa.String(length=128), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.UniqueConstraint("dataset_ext_ident", "user_ident", name="uq_dataset_like_user"),
+    )
+    op.create_index("idx_dataset_likes_ext_ident", "dataset_likes", ["dataset_ext_ident"])
+    op.create_index("idx_dataset_likes_user_ident", "dataset_likes", ["user_ident"])
+
 
 def downgrade() -> None:
+    op.drop_table("dataset_likes")
+    op.drop_table("aed_likes")
     op.drop_table("aed_verifications")
     op.drop_table("aed_source_records")
     op.drop_table("ingestion_runs")

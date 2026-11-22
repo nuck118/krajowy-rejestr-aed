@@ -164,3 +164,39 @@ class AEDVerification(Base):
         ),
         Index("idx_aed_verifications_aed_id", "aed_id", "created_at"),
     )
+
+
+class AEDLike(Base):
+    """Tracks per-user likes on individual AED records (MCOD v2.63.0 OTD-3096..OTD-3184)."""
+
+    __tablename__ = "aed_likes"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    aed_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("aeds.id", ondelete="CASCADE"), nullable=False
+    )
+    user_ident: Mapped[str] = mapped_column(String(128), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
+
+    __table_args__ = (
+        UniqueConstraint("aed_id", "user_ident", name="uq_aed_like_user"),
+        Index("idx_aed_likes_aed_id", "aed_id"),
+        Index("idx_aed_likes_user_ident", "user_ident"),
+    )
+
+
+class DatasetLike(Base):
+    """Tracks per-user likes on catalog datasets (MCOD v2.63.0 OTD-3096..OTD-3184)."""
+
+    __tablename__ = "dataset_likes"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    dataset_ext_ident: Mapped[str] = mapped_column(String(100), nullable=False)
+    user_ident: Mapped[str] = mapped_column(String(128), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
+
+    __table_args__ = (
+        UniqueConstraint("dataset_ext_ident", "user_ident", name="uq_dataset_like_user"),
+        Index("idx_dataset_likes_ext_ident", "dataset_ext_ident"),
+        Index("idx_dataset_likes_user_ident", "user_ident"),
+    )

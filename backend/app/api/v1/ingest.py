@@ -1,7 +1,9 @@
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.connectors.dane_gov_municipal import discover_dane_gov_aed_resources
+from app.core.config import settings
 from app.db.session import get_db
 from app.schemas.ingestion import (
     IngestionRunRequest,
@@ -11,6 +13,22 @@ from app.schemas.ingestion import (
 from app.services.ingestion_runner import execute_ingestion_run, execute_payload_ingestion
 
 router = APIRouter(prefix="/ingest", tags=["Ingestion"])
+
+
+@router.get("/discover-dane-gov")
+async def discover_dane_gov_resources(
+    q: str = Query(default="AED", min_length=2, max_length=100),
+    live: bool = Query(default=False, description="Query live api.dane.gov.pl/1.4 JSON:API endpoint"),
+) -> dict[str, object]:
+    """
+    Discovers municipal AED resources via dane.gov.pl's Falcon JSON:API v1.4
+    (`/1.4/search`) merged with canonical municipal feeds.
+    """
+    return await discover_dane_gov_aed_resources(
+        api_base_url=settings.DANE_GOV_API_BASE_URL,
+        query=q,
+        live_probe=live or settings.ENABLE_DANE_GOV_LIVE_DISCOVERY,
+    )
 
 
 @router.post("/run", response_model=IngestionRunResponse)

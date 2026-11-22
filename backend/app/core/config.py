@@ -43,6 +43,15 @@ class Settings(BaseSettings):
     AUTO_SEED_ON_EMPTY: bool = True
     ENABLE_REVERSE_GEOCODING: bool = True
 
+    # dane.gov.pl (MCOD v2.63.0) integration & observability settings
+    SLOW_SQL_LOGGING_ENABLED: bool = True
+    SLOW_SQL_THRESHOLD_SECONDS: float = 1.0
+    MCOD_API_VERSION: str = "1.4"
+    MCOD_SUPPORTED_API_VERSIONS: tuple[str, ...] = ("1.0", "1.4")
+    DANE_GOV_API_BASE_URL: str = "https://api.dane.gov.pl/1.4"
+    ENABLE_DANE_GOV_LIVE_DISCOVERY: bool = False
+    INSTITUTION_REGON: str = "00000012345678"
+
     @property
     def is_postgres(self) -> bool:
         return self.DATABASE_URL.startswith("postgresql")

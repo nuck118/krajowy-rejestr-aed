@@ -15,9 +15,11 @@ from app.services.exporter import (
     generate_jsonld_bytes,
 )
 from app.services.standard_xlsx import (
+    compute_dane_gov_harvester_md5,
     compute_standard_xlsx_etag,
     generate_dane_gov_harvester_xml,
     generate_standard_xlsx_bytes,
+    validate_dane_gov_harvester_xml,
 )
 
 router = APIRouter(tags=["dane.gov.pl Harvester Exports"])
@@ -135,7 +137,24 @@ async def export_standard_xlsx(
     )
 
 
-@router.get("/harvester/dane-gov.xml")
+async def _build_harvester_xml_payload(
+    request: Request,
+    session: AsyncSession,
+) -> bytes:
+    row = (
+        await session.execute(select(func.count(AED.id), func.max(AED.updated_at)))
+    ).one()
+    total_records = int(row[0] or 0)
+    max_dt = ensure_utc(row[1]) or datetime(2026, 11, 21, 12, 0, 0, tzinfo=timezone.utc)
+    base_url = str(request.base_url).rstrip("/")
+    return generate_dane_gov_harvester_xml(
+        base_url=base_url,
+        total_records=total_records,
+        updated_iso=max_dt.isoformat(),
+    )
+
+
+@router.api_route("/harvester/dane-gov.xml", methods=["GET", "HEAD"])
 async def export_dane_gov_harvester_xml(
     request: Request,
     if_none_match: str | None = Header(default=None),
@@ -148,19 +167,71 @@ async def export_dane_gov_harvester_xml(
     if _etag_matches(if_none_match, etag):
         return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
 
-    row = (
-        await session.execute(select(func.count(AED.id), func.max(AED.updated_at)))
-    ).one()
-    total_records = int(row[0] or 0)
-    max_dt = ensure_utc(row[1]) or datetime.now(timezone.utc)
-    base_url = str(request.base_url).rstrip("/")
-    content = generate_dane_gov_harvester_xml(
-        base_url=base_url,
-        total_records=total_records,
-        updated_iso=max_dt.isoformat(),
-    )
+    content = await _build_harvester_xml_payload(request, session)
+    headers["X-Harvester-MD5"] = compute_dane_gov_harvester_md5(content)
+    headers["X-Harvester-Schema-Version"] = "1.13"
+    if request.method == "HEAD":
+        return Response(
+            content=b"",
+            media_type="application/xml; charset=utf-8",
+            headers=headers,
+        )
     return Response(
         content=content,
         media_type="application/xml; charset=utf-8",
         headers=headers,
+    )
+
+
+@router.api_route("/harvester/dane-gov.md5", methods=["GET", "HEAD"])
+async def export_dane_gov_harvester_md5(
+    request: Request,
+    if_none_match: str | None = Header(default=None),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """
+    Companion MD5 checksum endpoint required by dane.gov.pl's XML harvester
+    (`mcod/harvester/utils.py:get_remote_xml_hash()` & `validate_md5()`).
+    """
+    etag = await compute_export_etag(
+        session, fmt="xml-md5", city=None, min_completeness=None, limit=None
+    )
+    headers = _build_export_headers("krajowy-rejestr-aed-harvester.md5", etag)
+    if _etag_matches(if_none_match, etag):
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
+
+    xml_bytes = await _build_harvester_xml_payload(request, session)
+    md5_digest = compute_dane_gov_harvester_md5(xml_bytes)
+    body = f"{md5_digest}\n".encode("utf-8")
+    if request.method == "HEAD":
+        return Response(
+            content=b"",
+            media_type="text/plain; charset=utf-8",
+            headers=headers,
+        )
+    return Response(
+        content=body,
+        media_type="text/plain; charset=utf-8",
+        headers=headers,
+    )
+
+
+@router.get("/harvester/validate")
+async def validate_dane_gov_harvester_feed(
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """
+    Validates our live XML and MD5 endpoints against the 5-step verification
+    pipeline in dane.gov.pl's `mcod/harvester/utils.py:validate_xml_url()`
+    and `xml_import_otwarte_dane_1_13.xsd`.
+    """
+    xml_bytes = await _build_harvester_xml_payload(request, session)
+    md5_digest = compute_dane_gov_harvester_md5(xml_bytes)
+    base_url = str(request.base_url).rstrip("/")
+    return validate_dane_gov_harvester_xml(
+        xml_bytes=xml_bytes,
+        md5_text=md5_digest,
+        content_type="application/xml; charset=utf-8",
+        xml_url=f"{base_url}/api/v1/harvester/dane-gov.xml",
     )

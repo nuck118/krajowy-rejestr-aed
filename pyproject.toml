@@ -5,8 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "krajowy-rejestr-aed"
 version = "1.0.0"
-description = "Krajowy Rejestr AED - National Polish AED Open Data Hub (dane.gov.pl)"
+description = "Krajowy Rejestr AED - National Polish AED Open Data Hub (dane.gov.pl / MCOD v2.63.0)"
 readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]>=0.115.0",

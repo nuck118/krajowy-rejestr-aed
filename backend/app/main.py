@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 import logging
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.db.models import AED
+from app.core.mcod_middleware import MCODCoreMiddleware, mcod_metrics
+from app.db.models import AED, AEDLike, AEDSourceRecord, DatasetLike
 from app.db.session import async_session_factory, get_db, init_db_schema
 from app.services.ingestion_runner import execute_ingestion_run
 
@@ -69,6 +70,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(MCODCoreMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list or ["*"],
@@ -78,6 +80,35 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+
+
+@app.get("/ping", tags=["System"])
+async def mcod_ping() -> dict[str, None]:
+    """Mirrors dane.gov.pl's `mcod/api.py` `/ping` health sink."""
+    return {"data": None}
+
+
+@app.get("/metrics", tags=["System"])
+async def prometheus_metrics_root(session: AsyncSession = Depends(get_db)) -> Response:
+    """Mirrors dane.gov.pl's `MetricsResource` (`/metrics`, OTD-3073)."""
+    total_aeds = int((await session.execute(select(func.count(AED.id)))).scalar_one() or 0)
+    aed_likes = int((await session.execute(select(func.count(AEDLike.id)))).scalar_one() or 0)
+    ds_likes = int((await session.execute(select(func.count(DatasetLike.id)))).scalar_one() or 0)
+    active_sources = int(
+        (
+            await session.execute(select(func.count(func.distinct(AEDSourceRecord.source_name))))
+        ).scalar_one()
+        or 0
+    )
+    payload = mcod_metrics.render_prometheus_text(
+        total_aeds=total_aeds,
+        total_likes=aed_likes + ds_likes,
+        active_sources=active_sources,
+    )
+    return Response(
+        content=payload.encode("utf-8"),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 @app.get("/health", tags=["System"])
@@ -91,6 +122,8 @@ async def health_check(session: AsyncSession = Depends(get_db)) -> dict[str, obj
         "status": "ok",
         "database_dialect": "postgresql+postgis" if settings.is_postgres else "sqlite+spatial",
         "postgis": postgis_active,
+        "mcod_api_version": settings.MCOD_API_VERSION,
+        "slow_sql_logging_enabled": settings.SLOW_SQL_LOGGING_ENABLED,
     }
 
 
@@ -110,6 +143,8 @@ if FRONTEND_DIST.is_dir():
             "redoc",
             "openapi.json",
             "health",
+            "ping",
+            "metrics",
         }:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 

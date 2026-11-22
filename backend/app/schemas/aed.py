@@ -93,6 +93,8 @@ class AEDRead(AEDIngestCandidate):
     primary_source: str
     sources: list[str] = Field(default_factory=list)
     open_now: bool | None = None
+    likes_count: int = Field(default=0, ge=0)
+    is_liked_by_current_user: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -167,3 +169,9 @@ class GeocodeResponse(BaseModel):
     city: str | None = None
     postal_code: str | None = None
     place_name: str | None = None
+
+
+class LikeStatusResponse(BaseModel):
+    id: str
+    likes_count: int
+    is_liked_by_current_user: bool

@@ -585,14 +585,43 @@ def compute_standard_xlsx_etag(data: bytes) -> str:
     return f'W/"xlsx-{digest}"'
 
 
+def _ensure_https_url(url: str) -> str:
+    """
+    xml_import_otwarte_dane_1_13.xsd requires resource <url> to match pattern `https://.*`.
+    Normalizes http:// base URLs to https:// inside the harvester XML payload.
+    """
+    stripped = url.strip()
+    if stripped.startswith("http://"):
+        return "https://" + stripped[len("http://") :]
+    if not stripped.startswith("https://"):
+        return "https://" + stripped.lstrip("/")
+    return stripped
+
+
+def compute_dane_gov_harvester_md5(xml_bytes: bytes) -> str:
+    """
+    Computes the lowercase 32-character hexadecimal MD5 digest required by
+    mcod/harvester/utils.py:get_remote_xml_hash() & validate_md5().
+    """
+    return hashlib.md5(xml_bytes).hexdigest().lower()
+
+
 def generate_dane_gov_harvester_xml(
     *,
     base_url: str,
     total_records: int,
     updated_iso: str,
 ) -> bytes:
+    """
+    Generates an XML catalog strictly conforming to dane.gov.pl's
+    `data/harvester/xml_import_otwarte_dane_1_13.xsd` (`urn:otwarte-dane:harvester:1.13`).
+    """
+    https_base = _ensure_https_url(base_url.rstrip("/"))
+    data_date = escape(updated_iso[:10])
+    last_update_dt = escape(updated_iso)
+
     xml_text = f"""<?xml version="1.0" encoding="UTF-8"?>
-<ns2:datasets xmlns:ns2="urn:open-data:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ns2:datasets xmlns:ns2="urn:otwarte-dane:harvester:1.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <dataset status="published">
     <extIdent>krajowy-rejestr-aed-polska</extIdent>
     <title>
@@ -603,9 +632,11 @@ def generate_dane_gov_harvester_xml(
       <polish>Ujednolicony, ogólnopolski zbiór danych o lokalizacji i dostępności defibrylatorów AED ({total_records} zweryfikowanych i zharmonizowanych punktów z deduplikacją przestrzenną 25 m), integrujący rejestry samorządowe dane.gov.pl, OpenStreetMap oraz zgłoszenia dysponentów w ramach akcji Impuls dla Danych (Misja AED).</polish>
       <english>Unified national open dataset of Automated External Defibrillators ({total_records} spatially deduplicated records within 25 m) integrating Polish municipal open data feeds, OpenStreetMap, and institutional submissions.</english>
     </description>
+    <url>{escape(https_base)}/api/v1/aeds</url>
     <updateFrequency>daily</updateFrequency>
     <hasDynamicData>true</hasDynamicData>
     <hasHighValueData>true</hasHighValueData>
+    <hasHighValueDataFromEuropeanCommissionList>true</hasHighValueDataFromEuropeanCommissionList>
     <hasResearchData>false</hasResearchData>
     <categories>
       <category>HEAL</category>
@@ -615,12 +646,14 @@ def generate_dane_gov_harvester_xml(
     <conditions>
       <source>true</source>
       <modification>false</modification>
-      <License>CC0 1.0</License>
+      <responsibilities>Dane mają charakter informacyjny i wspomagający ratownictwo; dysponenci odpowiadają za bieżący stan techniczny urządzeń AED.</responsibilities>
+      <dbOrCopyrighted>Zbiór udostępniony w domenie publicznej zgodnie z wzorcowym standardem dane.gov.pl (Misja AED).</dbOrCopyrighted>
+      <dbOrCopyrightedLicenseChosen>CC0 1.0</dbOrCopyrightedLicenseChosen>
     </conditions>
     <resources>
       <resource status="published">
         <extIdent>krajowy-rejestr-aed-geojson</extIdent>
-        <url>{escape(base_url)}/api/v1/export.geojson</url>
+        <url>{escape(https_base)}/api/v1/export.geojson</url>
         <title>
           <polish>Krajowy wykaz geoprzestrzenny AED (GeoJSON RFC 7946)</polish>
           <english>National Geospatial AED Feed (GeoJSON RFC 7946)</english>
@@ -630,16 +663,25 @@ def generate_dane_gov_harvester_xml(
           <english>EPSG:4326 Point geometries with canonical accessibility attributes and completeness scores.</english>
         </description>
         <availability>remote</availability>
-        <dataDate>{escape(updated_iso[:10])}</dataDate>
-        <lastUpdateDate>{escape(updated_iso)}</lastUpdateDate>
+        <dataDate>{data_date}</dataDate>
+        <lastUpdateDate>{last_update_dt}</lastUpdateDate>
         <hasDynamicData>true</hasDynamicData>
         <hasHighValueData>true</hasHighValueData>
-        <opennessScore>3</opennessScore>
-        <format>GeoJSON</format>
+        <hasHighValueDataFromEuropeanCommissionList>true</hasHighValueDataFromEuropeanCommissionList>
+        <hasResearchData>false</hasResearchData>
+        <containsProtectedData>false</containsProtectedData>
+        <specialSigns>
+          <specialSign>-</specialSign>
+        </specialSigns>
+        <regions>
+          <terytIdent>1465011</terytIdent>
+          <terytIdent>0461011</terytIdent>
+          <terytIdent>1261011</terytIdent>
+        </regions>
       </resource>
       <resource status="published">
         <extIdent>krajowy-rejestr-aed-csv</extIdent>
-        <url>{escape(base_url)}/api/v1/export.csv</url>
+        <url>{escape(https_base)}/api/v1/export.csv</url>
         <title>
           <polish>Tabela krajowego rejestru AED (CSV UTF-8 z BOM)</polish>
           <english>National Tabular AED Registry (CSV UTF-8 BOM)</english>
@@ -649,35 +691,40 @@ def generate_dane_gov_harvester_xml(
           <english>Tabular CSV file conforming to the canonical dane.gov.pl AED reference data standard.</english>
         </description>
         <availability>remote</availability>
-        <dataDate>{escape(updated_iso[:10])}</dataDate>
-        <lastUpdateDate>{escape(updated_iso)}</lastUpdateDate>
+        <dataDate>{data_date}</dataDate>
+        <lastUpdateDate>{last_update_dt}</lastUpdateDate>
         <hasDynamicData>true</hasDynamicData>
         <hasHighValueData>true</hasHighValueData>
-        <opennessScore>3</opennessScore>
-        <format>CSV</format>
+        <hasHighValueDataFromEuropeanCommissionList>true</hasHighValueDataFromEuropeanCommissionList>
+        <hasResearchData>false</hasResearchData>
+        <containsProtectedData>false</containsProtectedData>
+        <specialSigns>
+          <specialSign>-</specialSign>
+        </specialSigns>
       </resource>
       <resource status="published">
         <extIdent>krajowy-rejestr-aed-jsonld</extIdent>
-        <url>{escape(base_url)}/api/v1/export.jsonld</url>
+        <url>{escape(https_base)}/api/v1/export.jsonld</url>
         <title>
-          <polish>Katalog semantyczny Linked Open Data AED (DCAT-AP / JSON-LD)</polish>
-          <english>Semantic Linked Open Data AED Catalog (DCAT-AP / JSON-LD)</english>
+          <polish>Katalog semantyczny Linked Open Data AED (DCAT-AP-PL / JSON-LD)</polish>
+          <english>Semantic Linked Open Data AED Catalog (DCAT-AP-PL / JSON-LD)</english>
         </title>
         <description>
-          <polish>Powiązane dane semantyczne wykorzystujące słowniki W3C DCAT-AP oraz schema.org EmergencyService.</polish>
-          <english>Linked open data graph using W3C DCAT-AP and schema.org EmergencyService vocabularies.</english>
+          <polish>Powiązane dane semantyczne wykorzystujące słowniki W3C DCAT-AP-PL oraz schema.org EmergencyService.</polish>
+          <english>Linked open data graph using W3C DCAT-AP-PL and schema.org EmergencyService vocabularies.</english>
         </description>
         <availability>remote</availability>
-        <dataDate>{escape(updated_iso[:10])}</dataDate>
-        <lastUpdateDate>{escape(updated_iso)}</lastUpdateDate>
+        <dataDate>{data_date}</dataDate>
+        <lastUpdateDate>{last_update_dt}</lastUpdateDate>
         <hasDynamicData>true</hasDynamicData>
         <hasHighValueData>true</hasHighValueData>
-        <opennessScore>4</opennessScore>
-        <format>JSON-LD</format>
+        <hasHighValueDataFromEuropeanCommissionList>true</hasHighValueDataFromEuropeanCommissionList>
+        <hasResearchData>false</hasResearchData>
+        <containsProtectedData>false</containsProtectedData>
       </resource>
       <resource status="published">
         <extIdent>wzorcowy-zakres-danych-aed-xlsx</extIdent>
-        <url>{escape(base_url)}/api/v1/standard.xlsx</url>
+        <url>{escape(https_base)}/api/v1/standard.xlsx</url>
         <title>
           <polish>Wzorcowy zakres danych o defibrylatorach AED i szablon dla dysponentów (XLSX)</polish>
           <english>Reference AED Data Standard Specification and Data Owner Template (XLSX)</english>
@@ -687,12 +734,13 @@ def generate_dane_gov_harvester_xml(
           <english>Specification of the 18 canonical AED attributes, source reference scope matrix, and institutional template.</english>
         </description>
         <availability>remote</availability>
-        <dataDate>{escape(updated_iso[:10])}</dataDate>
-        <lastUpdateDate>{escape(updated_iso)}</lastUpdateDate>
+        <dataDate>{data_date}</dataDate>
+        <lastUpdateDate>{last_update_dt}</lastUpdateDate>
         <hasDynamicData>false</hasDynamicData>
         <hasHighValueData>true</hasHighValueData>
-        <opennessScore>3</opennessScore>
-        <format>XLSX</format>
+        <hasHighValueDataFromEuropeanCommissionList>true</hasHighValueDataFromEuropeanCommissionList>
+        <hasResearchData>false</hasResearchData>
+        <containsProtectedData>false</containsProtectedData>
       </resource>
     </resources>
     <tags>
@@ -704,7 +752,192 @@ def generate_dane_gov_harvester_xml(
       <tag lang="en">defibrillator</tag>
       <tag lang="en">emergency</tag>
     </tags>
+    <lastUpdateDate>{last_update_dt}</lastUpdateDate>
   </dataset>
 </ns2:datasets>
 """
     return xml_text.encode("utf-8")
+
+
+def validate_dane_gov_harvester_xml(
+    *,
+    xml_bytes: bytes,
+    md5_text: str,
+    content_type: str = "application/xml; charset=utf-8",
+    xml_url: str = "https://dane.gov.pl/api/v1/harvester/dane-gov.xml",
+) -> dict[str, object]:
+    """
+    Executes the exact 5-step validation pipeline from dane.gov.pl's
+    `mcod/harvester/utils.py:validate_xml_url()` and `xml_import_otwarte_dane_1_13.xsd`.
+    """
+    import os
+    import re
+    from urllib.parse import unquote
+    from xml.etree import ElementTree
+
+    errors: list[str] = []
+
+    # 1. check_xml_filename
+    filename = os.path.basename(xml_url)
+    filename_ok = xml_url.endswith(".xml") and (" " not in unquote(filename))
+    if not filename_ok:
+        errors.append(f"Invalid XML file name: {filename}")
+
+    # 2. check_content_type
+    content_type_ok = ("text/xml" in content_type) or ("application/xml" in content_type)
+    if not content_type_ok:
+        errors.append(f"Invalid Content-Type header: {content_type}")
+
+    # 3. get_remote_xml_hash & validate_md5
+    md5_body = md5_text.strip().lower()
+    md5_matches = [m.group(1) for m in re.finditer(r"(?=(\b[A-Fa-f0-9]{32}\b))", md5_body)]
+    computed_md5 = compute_dane_gov_harvester_md5(xml_bytes)
+    md5_ok = bool(md5_matches) and (md5_matches[0] == computed_md5)
+    if not md5_ok:
+        errors.append(f"MD5 mismatch: remote={md5_body!r}, computed={computed_md5!r}")
+
+    # 4. get_xml_schema_version ({urn:otwarte-dane:harvester:(.*)})
+    schema_version: str | None = None
+    datasets_count = 0
+    resources_count = 0
+    try:
+        root = ElementTree.fromstring(xml_bytes.decode("utf-8"))
+        version_match = re.search(r"\{urn:otwarte-dane:harvester:(.*)\}", root.tag)
+        if not version_match:
+            errors.append("Root tag missing {urn:otwarte-dane:harvester:<version>} namespace")
+        else:
+            schema_version = version_match.group(1)
+            if schema_version != "1.13":
+                errors.append(f"Expected XSD schema version 1.13, got {schema_version}")
+
+        # 5. XSD 1.13 structural validation
+        allowed_dataset_tags = {
+            "extIdent",
+            "intIdent",
+            "title",
+            "description",
+            "url",
+            "updateFrequency",
+            "categories",
+            "conditions",
+            "resources",
+            "tags",
+            "lastUpdateDate",
+            "hasDynamicData",
+            "hasHighValueData",
+            "hasHighValueDataFromEuropeanCommissionList",
+            "hasResearchData",
+            "supplements",
+        }
+        allowed_conditions_tags = {
+            "source",
+            "modification",
+            "responsibilities",
+            "dbOrCopyrighted",
+            "dbOrCopyrightedLicenseChosen",
+            "personalData",
+        }
+        allowed_resource_tags = {
+            "extIdent",
+            "intIdent",
+            "url",
+            "title",
+            "description",
+            "availability",
+            "dataDate",
+            "lastUpdateDate",
+            "hasDynamicData",
+            "hasHighValueData",
+            "hasHighValueDataFromEuropeanCommissionList",
+            "hasResearchData",
+            "containsProtectedData",
+            "specialSigns",
+            "supplements",
+            "isAutoDataDate",
+            "endlessDataDateUpdate",
+            "dataDateUpdatePeriod",
+            "autoDataDateStart",
+            "autoDataDateEnd",
+            "regions",
+        }
+        allowed_categories = {
+            "AGRI",
+            "EDUC",
+            "ENVI",
+            "ENER",
+            "TRAN",
+            "TECH",
+            "ECON",
+            "SOCI",
+            "HEAL",
+            "GOVE",
+            "REGI",
+            "JUST",
+            "INTR",
+        }
+        allowed_licenses = {
+            "CC0 1.0",
+            "CC BY 4.0",
+            "CC BY-SA 4.0",
+            "CC BY-NC 4.0",
+            "CC BY-NC-SA 4.0",
+            "CC BY-ND 4.0",
+            "CC BY-NC-ND 4.0",
+        }
+
+        for ds in root.findall("dataset"):
+            datasets_count += 1
+            for child in ds:
+                if child.tag not in allowed_dataset_tags:
+                    errors.append(f"Unexpected dataset element <{child.tag}> not in XSD 1.13")
+            ext_id = (ds.findtext("extIdent") or "").strip()
+            if not (1 <= len(ext_id) <= 36):
+                errors.append(f"Dataset extIdent length must be 1..36, got {len(ext_id)}")
+
+            cond = ds.find("conditions")
+            if cond is not None:
+                for c_child in cond:
+                    if c_child.tag not in allowed_conditions_tags:
+                        errors.append(f"Unexpected conditions element <{c_child.tag}> not in XSD 1.13")
+                lic = cond.findtext("dbOrCopyrightedLicenseChosen")
+                if lic and lic not in allowed_licenses:
+                    errors.append(f"Invalid dbOrCopyrightedLicenseChosen: {lic}")
+
+            cats = ds.find("categories")
+            if cats is None or len(cats.findall("category")) == 0:
+                errors.append("Dataset missing required <categories>")
+            else:
+                for cat in cats.findall("category"):
+                    if (cat.text or "").strip() not in allowed_categories:
+                        errors.append(f"Invalid category code: {cat.text}")
+
+            res_container = ds.find("resources")
+            if res_container is None or len(res_container.findall("resource")) == 0:
+                errors.append("Dataset missing required <resources>")
+            else:
+                for res in res_container.findall("resource"):
+                    resources_count += 1
+                    for r_child in res:
+                        if r_child.tag not in allowed_resource_tags:
+                            errors.append(f"Unexpected resource element <{r_child.tag}> not in XSD 1.13")
+                    r_ext = (res.findtext("extIdent") or "").strip()
+                    if not (1 <= len(r_ext) <= 36):
+                        errors.append(f"Resource extIdent length must be 1..36, got {len(r_ext)}")
+                    r_url = (res.findtext("url") or "").strip()
+                    if not r_url.startswith("https://"):
+                        errors.append(f"Resource <url> must match pattern https://.*, got {r_url}")
+    except Exception as exc:
+        errors.append(f"XML parse error: {exc}")
+
+    return {
+        "valid": len(errors) == 0,
+        "xsd_schema_version": schema_version,
+        "target_namespace": f"urn:otwarte-dane:harvester:{schema_version or 'unknown'}",
+        "md5_checksum": computed_md5,
+        "md5_verified": md5_ok,
+        "filename_verified": filename_ok,
+        "content_type_verified": content_type_ok,
+        "datasets_count": datasets_count,
+        "resources_count": resources_count,
+        "errors": errors,
+    }
