@@ -82,10 +82,11 @@ const SOURCE_SCOPE_ROWS = [
 ];
 
 const BRAND_COLORS = [
-  { name: "Granat Instytucjonalny dane.gov.pl", hex: "#0052A5", rgb: "0, 82, 165", cmyk: "100, 68, 0, 12", role: "Tarcza sygnetu, nawigacja główna" },
-  { name: "Karmazyn Narodowy / Czerwień AED", hex: "#D4213D", rgb: "212, 33, 61", cmyk: "10, 96, 75, 2", role: "Serce AED, belka gov.pl, akcent ratunkowy" },
-  { name: "Szmaragd Potwierdzonej Dostępności (WCAG AA)", hex: "#047857", rgb: "4, 120, 87", cmyk: "91, 21, 70, 8", role: "Węzły otwartych danych, status 24/7" },
-  { name: "Grafit Typograficzny (WCAG AAA)", hex: "#1B1B1B", rgb: "27, 27, 27", cmyk: "72, 66, 65, 80", role: "Logotyp główny i wersja monochromatyczna" },
+  { name: "Granat Państwowy (Tarcza i nazwa)", hex: "#152B45", rgb: "21, 43, 69", cmyk: "70, 38, 0, 73", role: "Tarcza sygnetu, typografia główna" },
+  { name: "Karmazyn Narodowy / Serce AED", hex: "#D9173B", rgb: "217, 23, 59", cmyk: "0, 89, 73, 15", role: "Serce AED, krzyż medyczny, wstęga RP" },
+  { name: "Błękit Instytucjonalny dane.gov.pl", hex: "#0052A5", rgb: "0, 82, 165", cmyk: "100, 50, 0, 35", role: "Nawigacja i linki portalu gov.pl" },
+  { name: "Szmaragd Dostępności 24/7 (WCAG AA)", hex: "#047857", rgb: "4, 120, 87", cmyk: "97, 0, 28, 53", role: "Status potwierdzonej dostępności 24/7" },
+  { name: "Grafit Typograficzny (WCAG AAA)", hex: "#1B1B1B", rgb: "27, 27, 27", cmyk: "0, 0, 0, 89", role: "Tekst główny i wersja monochromatyczna" },
 ];
 
 export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
@@ -163,7 +164,7 @@ export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
                 className="h-9 px-3.5 rounded-[3px] bg-[var(--gov-blue)] hover:bg-[var(--gov-blue-hover)] text-[var(--gov-blue-ink)] text-xs font-semibold inline-flex items-center gap-1.5"
               >
                 <DownloadIcon className="w-3.5 h-3.5" />
-                <span>{isPl ? "Pobierz Księgę Znaku (.pdf)" : "Download Brand Book (.pdf)"}</span>
+                <span>{isPl ? "Księga Znaku A4 Pion (.pdf)" : "Brand Book A4 Portrait (.pdf)"}</span>
               </a>
               <a
                 href="/deliverables/Prezentacja_Misja_AED.pdf"
@@ -177,55 +178,57 @@ export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
             </div>
           </div>
 
-          <div className="border border-[var(--border-hairline)] rounded-[3px] p-5 bg-[var(--bg-canvas)] flex flex-col items-center">
-            <img
-              src="/deliverables/logotyp_misja_aed.svg"
-              alt="Logotyp akcji Impuls dla Danych - Misja AED"
-              className="w-full max-w-[780px] h-auto"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            <div className="lg:col-span-5 border border-[var(--border-hairline)] rounded-[3px] p-4 bg-[var(--bg-surface)] space-y-3">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-secondary)]">
-                  {isPl ? "Hasło przewodnie akcji" : "Campaign Slogan"}
-                </div>
-                <p className="text-base font-bold text-[var(--ink-primary)] mt-1">
-                  „Zamknięta wiedza nie ratuje życia. Otwórz dane o swoim AED w portalu dane.gov.pl.”
-                </p>
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-secondary)]">
-                  {isPl ? "Pobierz logotyp we wszystkich wymaganych formatach" : "Download Logotype in All Required Formats"}
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {(["svg", "png", "jpg", "pdf"] as const).map((ext) => (
-                    <a
-                      key={ext}
-                      href={`/deliverables/logotyp_misja_aed.${ext}`}
-                      download={`logotyp_misja_aed.${ext}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-[3px] border border-[var(--border-input)] hover:border-[var(--gov-blue)] bg-[var(--bg-canvas)] font-mono text-xs font-semibold text-[var(--gov-blue)] inline-flex items-center gap-1.5"
-                    >
-                      <DownloadIcon className="w-3.5 h-3.5" />
-                      <span>.{ext.toUpperCase()}</span>
-                    </a>
-                  ))}
-                </div>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+            <div className="lg:col-span-5 border border-[var(--border-hairline)] rounded-[4px] p-6 bg-[var(--bg-canvas)] flex flex-col items-center justify-center">
+              <img
+                src="/deliverables/logotyp_misja_aed.png"
+                alt="Logotyp Krajowy Rejestr AED - Misja AED"
+                className="w-full max-w-[320px] h-auto object-contain"
+              />
             </div>
 
-            <div className="lg:col-span-7 border border-[var(--border-hairline)] rounded-[3px] p-4 bg-[var(--bg-canvas)] space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-wide text-[var(--gov-blue)]">
-                {isPl
-                  ? "Opis koncepcji znaku (4 zdania, zgodnie z wymogiem 3-5 zdań)"
-                  : "Logo Concept Description (4 sentences, per 3-5 sentence requirement)"}
+            <div className="lg:col-span-7 flex flex-col gap-4">
+              <div className="border border-[var(--border-hairline)] rounded-[4px] p-4 bg-[var(--bg-callout)] space-y-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-[var(--gov-blue)]">
+                    {isPl ? "Hasło przewodnie akcji" : "Campaign Slogan"}
+                  </div>
+                  <p className="text-base font-bold text-[var(--ink-primary)] mt-1">
+                    „Zamknięta wiedza nie ratuje życia. Otwórz dane o swoim AED w portalu dane.gov.pl.”
+                  </p>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-secondary)]">
+                    {isPl ? "Pobierz oficjalny logotyp we wszystkich wymaganych formatach" : "Download Official Logotype in All Required Formats"}
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {(["svg", "png", "jpg", "pdf"] as const).map((ext) => (
+                      <a
+                        key={ext}
+                        href={`/deliverables/logotyp_misja_aed.${ext}`}
+                        download={`logotyp_misja_aed.${ext}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-[3px] border border-[var(--border-input)] hover:border-[var(--gov-blue)] bg-[var(--bg-canvas)] font-mono text-xs font-semibold text-[var(--gov-blue)] inline-flex items-center gap-1.5"
+                      >
+                        <DownloadIcon className="w-3.5 h-3.5" />
+                        <span>.{ext.toUpperCase()}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-[var(--ink-primary)] leading-relaxed">
-                1. Koncepcja znaku łączy międzynarodowy symbol defibrylatora AED (serce oraz impuls elektryczny EKG) z otwartą strukturą węzłów sieciowych tworzących rejestr danych publicznych. 2. Sygnet obrazuje transformację rozproszonych, zamkniętych na klucz informacji w jeden otwarty, publiczny impuls ratujący życie w pierwszych, decydujących minutach nagłego zatrzymania krążenia. 3. Kontrastowa kolorystyka spaja czerwień ratunkową oraz narodowy karmazyn z instytucjonalnym granatem portalu dane.gov.pl i szmaragdową zielenią potwierdzonej dostępności urządzenia 24/7. 4. Prosta, geometryczna konstrukcja gwarantuje natychmiastową rozpoznawalność i czytelność zarówno w aplikacjach mobilnych służb ratowniczych, jak i w materiałach promocyjnych skierowanych do samorządów oraz instytucji.
-              </p>
+
+              <div className="border border-[var(--border-hairline)] rounded-[4px] p-4 bg-[var(--bg-canvas)] space-y-2 flex-1">
+                <div className="text-xs font-semibold uppercase tracking-wide text-[var(--gov-blue)]">
+                  {isPl
+                    ? "Opis koncepcji znaku (4 zdania, zgodnie z wymogiem 3-5 zdań)"
+                    : "Logo Concept Description (4 sentences, per 3-5 sentence requirement)"}
+                </div>
+                <p className="text-sm text-[var(--ink-primary)] leading-relaxed">
+                  1. Znak łączy heraldyczną tarczę bezpieczeństwa publicznego i znacznik lokalizacji (pinezkę GPS) z międzynarodowym symbolem defibrylatora AED (serce z impulsem elektrycznym na tle krzyża medycznego). 2. Biało-czerwona wstęga spina sygnet z tożsamością państwową Rzeczypospolitej Polskiej oraz systemem Państwowego Ratownictwa Medycznego i portalu dane.gov.pl. 3. Zestawienie głębokiego granatu państwowego (#152B45) z narodowym karmazynem (#D9173B) zapewnia natychmiastową rozpoznawalność w sytuacji zagrożenia życia i pełną czytelność zgodnie z WCAG 2.1 AA. 4. Zwarta, symetryczna konstrukcja sprawdza się zarówno jako oznakowanie fizycznych kapsuł AED, jak i w interfejsach mobilnych, webowych oraz materiałach promocyjnych kierowanych do dysponentów danych.
+                </p>
+              </div>
             </div>
           </div>
 
