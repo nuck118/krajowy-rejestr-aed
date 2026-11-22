@@ -1,7 +1,72 @@
 import os
 from pathlib import Path
+from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from pydantic import PrivateAttr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+_ASYNCPG_UNSUPPORTED_PARAMS = frozenset(
+    {
+        "sslmode",
+        "channel_binding",
+        "pgbouncer",
+        "schema",
+        "connection_limit",
+        "pool_timeout",
+        "connect_timeout",
+    }
+)
+
+
+def prepare_async_database_url(raw_url: str) -> tuple[str, dict[str, Any]]:
+    """Normalize Prisma Console / Neon / Supabase / Heroku Postgres URLs for SQLAlchemy asyncpg."""
+    url = raw_url.strip()
+    if url.startswith("prisma+postgres://"):
+        raise ValueError(
+            "prisma+postgres:// Accelerate URLs cannot be used with Python/SQLAlchemy. "
+            "Use Prisma Console's Direct TCP connection string "
+            "(postgres://...@db.prisma.io:5432/postgres?sslmode=require) instead."
+        )
+
+    if not url.startswith(("postgres://", "postgresql://", "postgresql+")):
+        return url, {"timeout": 30}
+
+    if url.startswith("postgres://"):
+        url = "postgresql+asyncpg://" + url[len("postgres://") :]
+    elif url.startswith("postgresql://"):
+        url = "postgresql+asyncpg://" + url[len("postgresql://") :]
+    elif url.startswith("postgresql+psycopg2://"):
+        url = "postgresql+asyncpg://" + url[len("postgresql+psycopg2://") :]
+    elif url.startswith("postgresql+psycopg://"):
+        url = "postgresql+asyncpg://" + url[len("postgresql+psycopg://") :]
+
+    parts = urlsplit(url)
+    query_items = parse_qsl(parts.query, keep_blank_values=True)
+    params_map = {k.lower(): v for k, v in query_items}
+    clean_query = [
+        (k, v) for k, v in query_items if k.lower() not in _ASYNCPG_UNSUPPORTED_PARAMS
+    ]
+
+    connect_args: dict[str, Any] = {}
+    sslmode = params_map.get("sslmode", "").lower()
+    host = (parts.hostname or "").lower()
+    is_managed_tls_host = host.endswith(
+        (".prisma.io", ".neon.tech", ".supabase.co", ".supabase.com")
+    )
+
+    if sslmode in {"require", "verify-ca", "verify-full", "prefer"} or (
+        not sslmode and is_managed_tls_host
+    ):
+        connect_args["ssl"] = "require"
+
+    if params_map.get("pgbouncer", "").lower() in {"true", "1"} or host.endswith(".prisma.io"):
+        connect_args["statement_cache_size"] = 0
+
+    normalized_url = urlunsplit(
+        (parts.scheme, parts.netloc, parts.path, urlencode(clean_query), parts.fragment)
+    )
+    return normalized_url, connect_args
 
 
 def _default_data_dir() -> Path:
@@ -58,7 +123,7 @@ class Settings(BaseSettings):
 
     @property
     def is_postgres(self) -> bool:
-        return self.DATABASE_URL.startswith("postgresql")
+        return self.DATABASE_URL.startswith(("postgresql", "postgres://"))
 
     @property
     def use_postgis(self) -> bool:

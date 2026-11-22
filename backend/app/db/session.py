@@ -3,18 +3,20 @@ from collections.abc import AsyncGenerator
 from sqlalchemy import Text, event, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.core.config import settings
+from app.core.config import prepare_async_database_url, settings
 
 logger = logging.getLogger(__name__)
 
-engine_kwargs: dict = {"echo": False, "future": True}
-if settings.is_postgres:
-    engine_kwargs["pool_size"] = 10
-    engine_kwargs["max_overflow"] = 20
-else:
-    engine_kwargs["connect_args"] = {"timeout": 30}
+db_url, connect_args = prepare_async_database_url(settings.DATABASE_URL)
 
-engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
+engine_kwargs: dict = {"echo": False, "future": True, "connect_args": connect_args}
+if settings.is_postgres:
+    engine_kwargs["pool_size"] = 5
+    engine_kwargs["max_overflow"] = 10
+    engine_kwargs["pool_pre_ping"] = True
+    engine_kwargs["pool_recycle"] = 300
+
+engine = create_async_engine(db_url, **engine_kwargs)
 
 if not settings.is_postgres:
     @event.listens_for(engine.sync_engine, "connect")
