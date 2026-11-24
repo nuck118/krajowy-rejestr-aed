@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { apiUrl, docsUrl } from "../../api/client";
 import { TRANSLATIONS, type Locale } from "../../i18n/translations";
 import { CloseIcon, ExternalLinkIcon } from "../icons/Icons";
-import { PolishCoatOfArms } from "../icons/PolishCoatOfArms";
 import type { AppTab } from "./TopBar";
 
 interface GovFooterProps {
@@ -40,10 +39,10 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
         <div className="max-w-[1440px] mx-auto px-3 sm:px-4 py-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[var(--border-hairline)]">
             <div className="flex items-center gap-3.5">
-              <PolishCoatOfArms className="h-11 w-auto shrink-0" />
-              <span
-                className="w-[2px] h-8 bg-[var(--gov-crimson)] shrink-0"
-                aria-hidden="true"
+              <img
+                src="/deliverables/logotyp_misja_aed.png"
+                alt={t.portalTitle}
+                className="h-12 w-auto shrink-0 object-contain"
               />
               <div>
                 <div className="text-base font-bold text-[var(--ink-primary)]">
@@ -53,9 +52,6 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
                   {t.footer.serviceSubtitle}
                 </div>
               </div>
-            </div>
-            <div className="text-xs font-bold text-[var(--ink-primary)]">
-              gov.pl
             </div>
           </div>
 
@@ -134,8 +130,8 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
                 <li>
                   <a href={apiUrl("/api/v1/harvester/dane-gov.xml")} className="hover:underline">
                     {locale === "pl"
-                      ? "Katalog XML harvestera dane.gov.pl"
-                      : "dane.gov.pl Harvester XML Catalog"}
+                      ? "Katalog XML harvestera (DCAT)"
+                      : "Open Data XML Harvester Catalog"}
                   </a>
                 </li>
                 <li>
@@ -166,17 +162,6 @@ export function GovFooter({ locale, onNavigate }: GovFooterProps) {
                   >
                     {t.footer.a11yBtn}
                   </button>
-                </li>
-                <li>
-                  <a
-                    href="https://dane.gov.pl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-[var(--gov-blue)] hover:underline inline-flex items-center gap-1"
-                  >
-                    <span>{t.footer.daneGovLink}</span>
-                    <ExternalLinkIcon className="w-3.5 h-3.5" />
-                  </a>
                 </li>
                 <li className="pt-1 leading-relaxed">{t.footer.licenseNotice}</li>
               </ul>

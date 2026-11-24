@@ -4,12 +4,12 @@ export type Locale = "pl" | "en";
 
 export const TRANSLATIONS = {
   pl: {
-    pageTitle: "Krajowy Rejestr AED | Ministerstwo Cyfryzacji (gov.pl)",
+    pageTitle: "Krajowy Rejestr AED | Ogólnopolska Baza Defibrylatorów",
     skipToContent: "Przejdź do treści głównej",
-    serviceName: "Serwis Rzeczypospolitej Polskiej",
-    ministryName: "Ministerstwo Cyfryzacji",
+    serviceName: "Ogólnopolska Baza Defibrylatorów AED",
+    ministryName: "Otwarty Rejestr AED",
     portalTitle: "Krajowy Rejestr AED",
-    portalSubtitle: "Krajowy portal otwartych danych o defibrylatorach AED",
+    portalSubtitle: "Otwarty portal danych o defibrylatorach AED",
     textSize: "Rozmiar tekstu:",
     highContrast: "Wysoki kontrast",
     locateNearest: "Znajdź najbliższy AED",
@@ -18,7 +18,7 @@ export const TRANSLATIONS = {
     dismiss: "Zamknij",
     nav: {
       map: "Mapa i wyszukiwarka AED",
-      harvester: "Otwarte dane (dane.gov.pl)",
+      harvester: "Otwarte dane i eksporty",
       submit: "Zgłoś lub zweryfikuj AED",
       campaign: "Kampania i Standard (Misja AED)",
     },
@@ -33,9 +33,9 @@ export const TRANSLATIONS = {
     geoIpRejectedSuffix:
       "km). Mapa nie została przesunięta. Wpisz swój adres w wyszukiwarce lub kliknij „Wskaż moją lokalizację na mapie”.",
     mapView: {
-      breadcrumbHome: "gov.pl",
-      breadcrumbMinistry: "Ministerstwo Cyfryzacji",
-      breadcrumbCurrent: "Krajowy Rejestr AED",
+      breadcrumbHome: "Strona główna",
+      breadcrumbMinistry: "Krajowy Rejestr AED",
+      breadcrumbCurrent: "Mapa i wyszukiwarka AED",
       heading: "Znajdź defibrylator (AED) w Polsce",
       intro:
         "Wyszukaj najbliższy automatyczny defibrylator zewnętrzny w ujednoliconym rejestrze danych samorządowych, OpenStreetMap oraz instytucji publicznych. W przypadku nagłego zatrzymania krążenia natychmiast zadzwoń pod numer alarmowy 112 i rozpocznij uciskanie klatki piersiowej.",
@@ -87,7 +87,7 @@ export const TRANSLATIONS = {
       defaultAedTitle: "Automatyczny defibrylator zewnętrzny (AED)",
       qualityLabel: "Jakość danych:",
       overviewTitle: "Podsumowanie krajowego rejestru",
-      overviewSubtitle: "Aktualne statystyki dla portalu dane.gov.pl",
+      overviewSubtitle: "Aktualne statystyki otwartego rejestru AED",
       overviewLoading: "Wczytywanie statystyk rejestru...",
       unifiedAeds: "Ujednolicone punkty AED",
       duplicatesMerged: "Scalone duplikaty (25 m)",
@@ -145,7 +145,7 @@ export const TRANSLATIONS = {
       alertRestrictedBody:
         "Urządzenie znajduje się w strefie o ograniczonym dostępie. Skontaktuj się z ochroną lub recepcją obiektu przed dotarciem na miejsce.",
       callSecurityBtn: "Zadzwoń do obiektu",
-      completenessHeading: "Kompletność danych (standard dane.gov.pl)",
+      completenessHeading: "Kompletność danych (standard otwartych danych)",
       getDirections: "Wyznacz trasę pieszą",
       verifyButton: "Potwierdź stan lub uzupełnij opis",
       verifySuccess: "Dziękujemy. Weryfikacja została zapisana w krajowym rejestrze.",
@@ -179,10 +179,10 @@ export const TRANSLATIONS = {
     harvester: {
       breadcrumbHome: "Strona główna",
       breadcrumbSection: "Krajowy Rejestr AED",
-      breadcrumbCurrent: "Otwarte dane i dane.gov.pl",
-      heading: "Otwarte dane AED i harmonizacja z dane.gov.pl",
+      breadcrumbCurrent: "Otwarte dane i eksporty",
+      heading: "Otwarte dane AED i harmonizacja źródeł",
       intro:
-        "Rozproszone rejestry samorządowe, dane z portalu dane.gov.pl oraz punkty z OpenStreetMap są walidowane w jednolitym standardzie Ministerstwa Cyfryzacji (licencja CC0-1.0, standard 4-gwiazdkowy DCAT-AP, automatyczna deduplikacja przestrzenna w promieniu 25 metrów).",
+        "Rozproszone rejestry samorządowe oraz punkty z OpenStreetMap są walidowane w jednolitym standardzie otwartych danych (licencja CC0-1.0, standard 4-gwiazdkowy DCAT-AP, automatyczna deduplikacja przestrzenna w promieniu 25 metrów).",
       refresh: "Odśwież dane",
       retry: "Spróbuj ponownie",
       loading: "Wczytywanie statystyk rejestru z API FastAPI...",
@@ -194,11 +194,11 @@ export const TRANSLATIONS = {
         sourcesTitle: "Aktywne źródła danych",
         sourcesSub: "Podłączone rejestry miejskie i OSM",
         compTitle: "Średnia kompletność",
-        compSubSuffix: "spełnia próg 60% dane.gov.pl",
+        compSubSuffix: "spełnia minimalny próg 60%",
       },
-      exportsHeading: "Pliki otwartych danych do pobrania (dane.gov.pl)",
+      exportsHeading: "Pliki otwartych danych do pobrania",
       exportsIntro:
-        "Pobierz aktualny wykaz defibrylatorów lub skopiuj stały adres URL dla automatycznego harvestera portalu dane.gov.pl (obsługa nagłówków ETag i odpowiedzi 304 Not Modified).",
+        "Pobierz aktualny wykaz defibrylatorów lub skopiuj stały adres URL dla automatycznego harvestera (obsługa nagłówków ETag i odpowiedzi 304 Not Modified).",
       downloadBtn: "Pobierz plik",
       downloadingBtn: "Pobieranie...",
       copyBtn: "Kopiuj adres URL",
@@ -211,7 +211,7 @@ export const TRANSLATIONS = {
         },
         csv: {
           label: "Arkusz danych tabelarycznych (CSV)",
-          desc: "Plik CSV kodowany w UTF-8 z BOM, gotowy do bezpośredniego otwarcia w programach biurowych i importu w dane.gov.pl.",
+          desc: "Plik CSV kodowany w UTF-8 z BOM, gotowy do bezpośredniego otwarcia w programach biurowych i automatycznego importu.",
           std: "RFC 4180, UTF-8 BOM",
         },
         jsonld: {
@@ -221,13 +221,13 @@ export const TRANSLATIONS = {
         },
         xlsx: {
           label: "Wzorcowy zakres danych AED i szablon dla dysponenta (XLSX)",
-          desc: "Arkusz Excel z 3 zakładkami: specyfikacja 18 pól kanonicznych, macierz zakresu referencyjnego źródeł oraz szablon do zasilania dane.gov.pl.",
+          desc: "Arkusz Excel z 3 zakładkami: specyfikacja 18 pól kanonicznych, macierz zakresu referencyjnego źródeł oraz szablon do zasilania rejestru.",
           std: "OOXML .xlsx, standard referencyjny Misja AED",
         },
         xml: {
-          label: "Katalog XML dla automatycznego harvestera dane.gov.pl",
-          desc: "Struktura XML zgodna ze schematem urn:open-data:0.1 do automatycznego pobierania zasobów przez portal dane.gov.pl.",
-          std: "Schemat harvestera dane.gov.pl XML",
+          label: "Katalog XML dla automatycznego harvestera (DCAT)",
+          desc: "Struktura XML zgodna ze schematem urn:open-data:1.13 do automatycznego pobierania zasobów przez systemy otwartych danych.",
+          std: "Schemat harvestera XML 1.13",
         },
       },
       inspectorHeading: "Interaktywne publiczne REST API",
@@ -248,7 +248,7 @@ export const TRANSLATIONS = {
         "Każde źródło przechodzi walidację schematu Pydantic v2 oraz przestrzenną deduplikację 25 m z zachowaniem pełnej historii pochodzenia.",
       standardCalloutTitle: "Wzorcowy zakres danych AED i porównanie źródeł (Misja AED)",
       standardCalloutBody:
-        "Zobacz pełną macierz zakresu referencyjnego wszystkich zintegrowanych źródeł, specyfikację 18 atrybutów standardu dane.gov.pl (.xlsx) oraz Księgę Znaku kampanii Impuls dla Danych.",
+        "Zobacz pełną macierz zakresu referencyjnego wszystkich zintegrowanych źródeł, specyfikację 18 atrybutów otwartego standardu (.xlsx) oraz Księgę Znaku kampanii Impuls dla Danych.",
       standardCalloutBtn: "Otwórz Kampanię i Standard",
       regionLabel: "Obszar OSM",
       syncSuccessPrefix: "Zakończono synchronizację źródła",
@@ -277,7 +277,7 @@ export const TRANSLATIONS = {
       uploadingBtn: "Przetwarzanie pliku...",
       sourceLabels: {
         dane_gov_municipal: {
-          title: "Oficjalne rejestry samorządowe dane.gov.pl",
+          title: "Rejestry samorządowe (otwarte dane miejskie)",
           subtitle: "UM Legionowo, UM Krosno, UM Marki, UM Przemyśl",
         },
         pl_geojson: {
@@ -329,33 +329,33 @@ export const TRANSLATIONS = {
       pickerTitle: "Wskaż lokalizację na mapie",
       pickerSubtitle: "Kliknij wejście do budynku lub punkt montażu na mapie",
       myGps: "Moje GPS",
-      readinessHeading: "Zgodność ze standardem dane.gov.pl",
-      readinessPass: "Zgłoszenie spełnia minimalny próg 60% wymagany przez dane.gov.pl.",
+      readinessHeading: "Zgodność ze standardem otwartych danych",
+      readinessPass: "Zgłoszenie spełnia minimalny próg 60% kompletności rekordu.",
       readinessFail: "Poniżej progu 60%. Uzupełnij opis lokalizacji, adres lub godziny dostępności.",
       errCoords: "Wymagane są poprawne współrzędne geograficzne.",
       errPlacement: "Opis miejsca montażu musi zawierać co najmniej 3 znaki.",
     },
     footer: {
-      serviceTitle: "Serwis Rzeczypospolitej Polskiej | Ministerstwo Cyfryzacji",
-      serviceSubtitle: "Krajowy Rejestr AED: Publiczny rejestr defibrylatorów i hub otwartych danych",
+      serviceTitle: "Krajowy Rejestr AED",
+      serviceSubtitle: "Otwarty rejestr defibrylatorów i hub otwartych danych",
       colSections: "Sekcje portalu",
       colFeeds: "Otwarte dane i API",
-      colInfo: "Informacje publiczne i dostępność",
+      colInfo: "Informacje i dostępność",
       feedGeojson: "Kanał GeoJSON (RFC 7946)",
       feedCsv: "Eksport CSV (UTF-8 BOM)",
       feedJsonld: "Metadane JSON-LD (DCAT-AP)",
       feedDocs: "Dokumentacja OpenAPI 3.1 (Swagger)",
       a11yBtn: "Deklaracja dostępności",
-      daneGovLink: "Portal dane.gov.pl",
+      daneGovLink: "Otwarte dane",
       licenseNotice:
         "Dane udostępniane są w domenie publicznej (CC0-1.0). W stanie zagrożenia życia zadzwoń pod numer alarmowy 112.",
       a11yTitle: "Deklaracja dostępności | Krajowy Rejestr AED",
       a11yBody:
-        "Ministerstwo Cyfryzacji zobowiązuje się zapewnić dostępność serwisu Krajowy Rejestr AED zgodnie z ustawą z dnia 4 kwietnia 2019 r. o dostępności cyfrowej stron internetowych i aplikacji mobilnych podmiotów publicznych.",
+        "Projekt Krajowy Rejestr AED został zaprojektowany z myślą o zapewnieniu pełnej dostępności cyfrowej zgodnie ze standardem WCAG 2.1.",
       a11yPoints: [
         "Zgodność ze standardem WCAG 2.1 na poziomie AA (kontrast >= 4.5:1) oraz trybem wysokiego kontrastu AAA (>= 10:1).",
-        "Pełna obsługa nawigacji klawiaturą z wyraźnym 3 px wskaźnikiem fokusu (także na granatowym pasku nawigacji) i obsługą klawisza Escape w oknach dialogowych.",
-        "Trzystopniowe powiększanie tekstu w standardzie gov.pl (A 100%, A+ 120%, A++ 140%) oraz wsparcie dla preferencji ograniczonego ruchu (prefers-reduced-motion).",
+        "Pełna obsługa nawigacji klawiaturą z wyraźnym 3 px wskaźnikiem fokusu i obsługą klawisza Escape w oknach dialogowych.",
+        "Trzystopniowe powiększanie tekstu (A 100%, A+ 120%, A++ 140%) oraz wsparcie dla preferencji ograniczonego ruchu (prefers-reduced-motion).",
         "Komunikaty aria-live dla czytników ekranu, opisane tabele danych (caption, scope) oraz wyraźne ostrzeżenia o fizycznej dostępności AED (kontekst 3 marca).",
       ],
     },
@@ -378,12 +378,12 @@ export const TRANSLATIONS = {
     } as Record<CompletenessCheckKey, string>,
   },
   en: {
-    pageTitle: "Krajowy Rejestr AED | Ministry of Digitization (gov.pl)",
+    pageTitle: "Krajowy Rejestr AED | National AED Open Data Registry",
     skipToContent: "Skip to main content",
-    serviceName: "Service of the Republic of Poland",
-    ministryName: "Ministry of Digitization",
+    serviceName: "Polish National AED Open Data Directory",
+    ministryName: "Open AED Registry",
     portalTitle: "Krajowy Rejestr AED",
-    portalSubtitle: "National Automated External Defibrillator Open Data Portal",
+    portalSubtitle: "Open Automated External Defibrillator Data Portal",
     textSize: "Text size:",
     highContrast: "High contrast",
     locateNearest: "Locate nearest AED",
@@ -392,7 +392,7 @@ export const TRANSLATIONS = {
     dismiss: "Close",
     nav: {
       map: "AED Map and Locator",
-      harvester: "Open Data (dane.gov.pl)",
+      harvester: "Open Data & Exports",
       submit: "Submit or Verify AED",
       campaign: "Campaign & Standard (Misja AED)",
     },
@@ -407,9 +407,9 @@ export const TRANSLATIONS = {
     geoIpRejectedSuffix:
       "km). The map was not moved. Enter your street address above or click 'Pick my location on map'.",
     mapView: {
-      breadcrumbHome: "gov.pl",
-      breadcrumbMinistry: "Ministry of Digitization",
-      breadcrumbCurrent: "Krajowy Rejestr AED",
+      breadcrumbHome: "Home",
+      breadcrumbMinistry: "Krajowy Rejestr AED",
+      breadcrumbCurrent: "AED Map and Locator",
       heading: "Find a Defibrillator (AED) in Poland",
       intro:
         "Search verified automated external defibrillators consolidated from Polish municipal open data registries, OpenStreetMap, and public institutions. In suspected cardiac arrest, call 112 immediately and begin chest compressions.",
@@ -461,7 +461,7 @@ export const TRANSLATIONS = {
       defaultAedTitle: "Automated External Defibrillator (AED)",
       qualityLabel: "Quality:",
       overviewTitle: "National Registry Overview",
-      overviewSubtitle: "Live statistics for dane.gov.pl harvesting",
+      overviewSubtitle: "Live statistics from the unified AED open data hub",
       overviewLoading: "Loading live national statistics...",
       unifiedAeds: "Unified AEDs",
       duplicatesMerged: "Duplicates merged (25 m)",
@@ -519,7 +519,7 @@ export const TRANSLATIONS = {
       alertRestrictedBody:
         "This device is located in a restricted access zone. Contact facility reception or security before arriving.",
       callSecurityBtn: "Call facility",
-      completenessHeading: "dane.gov.pl Record Completeness",
+      completenessHeading: "Open Data Record Completeness",
       getDirections: "Get walking directions",
       verifyButton: "Verify status or add placement details",
       verifySuccess: "Thank you. Your verification has been saved in the national registry.",
@@ -553,10 +553,10 @@ export const TRANSLATIONS = {
     harvester: {
       breadcrumbHome: "Home",
       breadcrumbSection: "Krajowy Rejestr AED",
-      breadcrumbCurrent: "Open Data and dane.gov.pl",
-      heading: "National AED Open Data and dane.gov.pl Harvester",
+      breadcrumbCurrent: "Open Data and Exports",
+      heading: "National AED Open Data and Harmonization",
       intro:
-        "Fragmented municipal, institutional, and OpenStreetMap defibrillator records are validated against a single Ministry of Digitization standard (CC0-1.0 license, 4-Star DCAT-AP metadata, automatic 25 m spatial deduplication) for automated dane.gov.pl harvesting.",
+        "Fragmented municipal, institutional, and OpenStreetMap defibrillator records are validated against a single open data standard (CC0-1.0 license, 4-Star DCAT-AP metadata, automatic 25 m spatial deduplication) for automated harvesting.",
       refresh: "Refresh metrics",
       retry: "Retry",
       loading: "Loading registry statistics from FastAPI...",
@@ -570,9 +570,9 @@ export const TRANSLATIONS = {
         compTitle: "National Completeness",
         compSubSuffix: "records meet 60% standard",
       },
-      exportsHeading: "Harvestable Open Data Files (dane.gov.pl)",
+      exportsHeading: "Harvestable Open Data Files",
       exportsIntro:
-        "Download the complete national registry or copy a permanent URL for automated dane.gov.pl harvesting with ETag conditional requests (304 Not Modified).",
+        "Download the complete national registry or copy a permanent URL for automated harvesting with ETag conditional requests (304 Not Modified).",
       downloadBtn: "Download file",
       downloadingBtn: "Downloading...",
       copyBtn: "Copy URL",
@@ -585,7 +585,7 @@ export const TRANSLATIONS = {
         },
         csv: {
           label: "Tabular Registry Spreadsheet (CSV)",
-          desc: "UTF-8 with BOM spreadsheet file compatible with Excel, municipal portals, and dane.gov.pl harvesters.",
+          desc: "UTF-8 with BOM spreadsheet file compatible with Excel, municipal portals, and automated harvesters.",
           std: "RFC 4180, UTF-8 BOM",
         },
         jsonld: {
@@ -599,9 +599,9 @@ export const TRANSLATIONS = {
           std: "OOXML .xlsx, Misja AED Reference Standard",
         },
         xml: {
-          label: "Automated dane.gov.pl XML Harvester Catalog",
-          desc: "Machine-readable XML feed conforming to urn:open-data:0.1 for automated ingestion by dane.gov.pl.",
-          std: "dane.gov.pl XML Harvester Schema",
+          label: "Automated XML Harvester Catalog (DCAT)",
+          desc: "Machine-readable XML feed conforming to urn:open-data:1.13 for automated ingestion by open data portals.",
+          std: "Open Data XML 1.13 Harvester Schema",
         },
       },
       inspectorHeading: "Public REST API and Interactive Inspector",
@@ -622,7 +622,7 @@ export const TRANSLATIONS = {
         "Each source is normalized into the canonical Polish AED schema and deduplicated within a 25-meter radius while preserving full source provenance.",
       standardCalloutTitle: "Reference AED Data Standard and Source Scope Matrix (Misja AED)",
       standardCalloutBody:
-        "View the full reference scope comparison across all integrated sources, the 18-field dane.gov.pl standard specification (.xlsx), and the Impulse for Data campaign Brand Book.",
+        "View the full reference scope comparison across all integrated sources, the 18-field open data standard specification (.xlsx), and the Impulse for Data campaign Brand Book.",
       standardCalloutBtn: "Open Campaign & Standard",
       regionLabel: "OSM Region",
       syncSuccessPrefix: "Synchronization completed for",
@@ -651,7 +651,7 @@ export const TRANSLATIONS = {
       uploadingBtn: "Ingesting file...",
       sourceLabels: {
         dane_gov_municipal: {
-          title: "Official dane.gov.pl Municipal Feeds",
+          title: "Municipal Open Data Feeds",
           subtitle: "UM Legionowo, UM Krosno, UM Marki, UM Przemyśl",
         },
         pl_geojson: {
@@ -703,34 +703,34 @@ export const TRANSLATIONS = {
       pickerTitle: "Select coordinates on map",
       pickerSubtitle: "Click the building or street entrance to set exact WGS84 position",
       myGps: "My GPS",
-      readinessHeading: "dane.gov.pl Schema Readiness",
-      readinessPass: "This entry meets the 60% minimum dane.gov.pl open data harvesting threshold.",
+      readinessHeading: "Open Data Schema Readiness",
+      readinessPass: "This entry meets the 60% minimum open data completeness threshold.",
       readinessFail:
         "Below the 60% minimum threshold. Fill in placement, address, or opening hours to improve record quality.",
       errCoords: "Valid numeric latitude and longitude are required.",
       errPlacement: "Exact placement description must be at least 3 characters.",
     },
     footer: {
-      serviceTitle: "Service of the Republic of Poland | Ministry of Digitization",
-      serviceSubtitle: "Krajowy Rejestr AED: Official Polish National Automated External Defibrillator Portal",
+      serviceTitle: "Krajowy Rejestr AED",
+      serviceSubtitle: "Open Polish National Automated External Defibrillator Registry",
       colSections: "Portal Sections",
       colFeeds: "Open Data and API Feeds",
-      colInfo: "Public Information and Accessibility",
+      colInfo: "Information and Accessibility",
       feedGeojson: "GeoJSON Feed (RFC 7946)",
       feedCsv: "CSV Spreadsheet Export (UTF-8 BOM)",
       feedJsonld: "JSON-LD Metadata (DCAT-AP)",
       feedDocs: "OpenAPI 3.1 Swagger UI",
       a11yBtn: "Accessibility Declaration",
-      daneGovLink: "dane.gov.pl Portal",
+      daneGovLink: "Open Data",
       licenseNotice:
         "Published under CC0-1.0 Public Domain. In a medical emergency, call 112 immediately.",
       a11yTitle: "Accessibility Declaration | Krajowy Rejestr AED",
       a11yBody:
-        "The Ministry of Digitization commits to ensuring accessibility of Krajowy Rejestr AED in accordance with the Act of 4 April 2019 on digital accessibility of public sector websites and mobile applications.",
+        "Krajowy Rejestr AED is built to provide full digital accessibility in accordance with WCAG 2.1 Level AA and AAA standards.",
       a11yPoints: [
         "Compliance with WCAG 2.1 Level AA (contrast >= 4.5:1) and AAA high-contrast mode (>= 10:1).",
-        "Full keyboard navigation support with a 3 px visible focus indicator (including on the navy navigation bar) and Escape-key dialog handling.",
-        "Three-step gov.pl text scaling (A 100%, A+ 120%, A++ 140%) and prefers-reduced-motion support.",
+        "Full keyboard navigation support with a 3 px visible focus indicator and Escape-key dialog handling.",
+        "Three-step text scaling (A 100%, A+ 120%, A++ 140%) and prefers-reduced-motion support.",
         "Live screen-reader announcements (aria-live), semantic data tables (caption, scope), and prominent physical AED reachability warnings (March 3 context).",
       ],
     },

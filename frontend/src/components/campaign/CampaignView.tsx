@@ -32,7 +32,7 @@ const REFERENCE_STANDARD_ROWS = [
 
 const SOURCE_SCOPE_ROWS = [
   {
-    source: "Wzorcowy Standard dane.gov.pl (Misja AED)",
+    source: "Wzorcowy Standard Otwartych Danych (Misja AED)",
     scope: "Ogólnopolski (standard docelowy)",
     format: "XLSX, CSV, GeoJSON, JSON-LD, XML",
     coordsAddr: "WGS84 + Ulica + Miasto + Kod + TERYT",
@@ -48,25 +48,25 @@ const SOURCE_SCOPE_ROWS = [
     hoursStatus: "37.1% godziny otwarcia, 32.7% data weryfikacji",
   },
   {
-    source: "UM Legionowo (portal dane.gov.pl)",
+    source: "UM Legionowo (rejestr miejski)",
     scope: "Samorządowy (Gmina Miejska Legionowo)",
-    format: "CSV (api.dane.gov.pl)",
+    format: "CSV (otwarte dane miejskie)",
     coordsAddr: "WGS84 + Ulica + Kod pocztowy + TERYT SIMC",
     placementAccess: "Nazwa obiektu użyteczności publicznej (public)",
     hoursStatus: "Status operational (Tier 1), godziny przy scalaniu z OSM",
   },
   {
-    source: "UM Krosno (portal dane.gov.pl)",
+    source: "UM Krosno (rejestr miejski)",
     scope: "Samorządowy (Miasto Krosno)",
-    format: "CSV (api.dane.gov.pl)",
+    format: "CSV (otwarte dane miejskie)",
     coordsAddr: "WGS84 + Adres z kodem pocztowym",
     placementAccess: "Kolumny Lokalizacja + Nazwa obiektu (public)",
     hoursStatus: "Status operational (Tier 1)",
   },
   {
-    source: "UM Marki (portal dane.gov.pl)",
+    source: "UM Marki (rejestr miejski)",
     scope: "Samorządowy (Gmina Miasto Marki)",
-    format: "CSV (api.dane.gov.pl)",
+    format: "CSV (otwarte dane miejskie)",
     coordsAddr: "Automatyczna korekta odwróconych osi X/Y + Adres",
     placementAccess: "Kolumny Lokalizacja + Nazwa obiektu (public)",
     hoursStatus: "Status operational (Tier 1)",
@@ -83,8 +83,8 @@ const SOURCE_SCOPE_ROWS = [
 
 const BRAND_COLORS = [
   { name: "Granat Państwowy (Tarcza i nazwa)", hex: "#152B45", rgb: "21, 43, 69", cmyk: "70, 38, 0, 73", role: "Tarcza sygnetu, typografia główna" },
-  { name: "Karmazyn Narodowy / Serce AED", hex: "#D9173B", rgb: "217, 23, 59", cmyk: "0, 89, 73, 15", role: "Serce AED, krzyż medyczny, wstęga RP" },
-  { name: "Błękit Instytucjonalny dane.gov.pl", hex: "#0052A5", rgb: "0, 82, 165", cmyk: "100, 50, 0, 35", role: "Nawigacja i linki portalu gov.pl" },
+  { name: "Karmazyn Narodowy / Serce AED", hex: "#D9173B", rgb: "217, 23, 59", cmyk: "0, 89, 73, 15", role: "Serce AED, krzyż medyczny, wstęga" },
+  { name: "Błękit Nawigacyjny", hex: "#0052A5", rgb: "0, 82, 165", cmyk: "100, 50, 0, 35", role: "Nawigacja, przyciski i linki portalu" },
   { name: "Szmaragd Dostępności 24/7 (WCAG AA)", hex: "#047857", rgb: "4, 120, 87", cmyk: "97, 0, 28, 53", role: "Status potwierdzonej dostępności 24/7" },
   { name: "Grafit Typograficzny (WCAG AAA)", hex: "#1B1B1B", rgb: "27, 27, 27", cmyk: "0, 0, 0, 89", role: "Tekst główny i wersja monochromatyczna" },
 ];
@@ -135,8 +135,8 @@ export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
           </h1>
           <p className="text-sm sm:text-base text-[var(--ink-secondary)] max-w-4xl leading-relaxed">
             {isPl
-              ? "Komplet artefaktów wypracowanych w ramach wyzwania „Misja AED: Dane na ratunek” dla portalu dane.gov.pl: ogólnopolska kampania zachęcająca dysponentów do otwierania danych o defibrylatorach, logotyp w formatach otwartych i produkcyjnych (.svg, .png, .jpg, .pdf), Księga Znaku (.pdf), tabela wzorcowego zakresu danych (.xlsx) oraz prezentacja rozwiązania (.pdf)."
-              : "Complete deliverables package for the 'Misja AED: Data to the Rescue' challenge on dane.gov.pl: national campaign encouraging data owners to publish defibrillator locations, logotype files (.svg, .png, .jpg, .pdf), Brand Book (.pdf), reference data standard spreadsheet (.xlsx), and presentation deck (.pdf)."}
+              ? "Komplet artefaktów wypracowanych w ramach wyzwania „Misja AED: Dane na ratunek”: ogólnopolska kampania zachęcająca dysponentów do otwierania danych o defibrylatorach, logotyp w formatach otwartych i produkcyjnych (.svg, .png, .jpg, .pdf), Księga Znaku (.pdf), tabela wzorcowego zakresu danych (.xlsx) oraz prezentacja rozwiązania (.pdf)."
+              : "Complete deliverables package for the 'Misja AED: Data to the Rescue' challenge: national campaign encouraging data owners to publish defibrillator locations, logotype files (.svg, .png, .jpg, .pdf), Brand Book (.pdf), reference data standard spreadsheet (.xlsx), and presentation deck (.pdf)."}
           </p>
         </div>
 
@@ -194,7 +194,7 @@ export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
                     {isPl ? "Hasło przewodnie akcji" : "Campaign Slogan"}
                   </div>
                   <p className="text-base font-bold text-[var(--ink-primary)] mt-1">
-                    „Zamknięta wiedza nie ratuje życia. Otwórz dane o swoim AED w portalu dane.gov.pl.”
+                    „Zamknięta wiedza nie ratuje życia. Otwórz dane o swoim AED w Krajowym Rejestrze AED.”
                   </p>
                 </div>
                 <div>
@@ -226,7 +226,7 @@ export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
                     : "Logo Concept Description (4 sentences, per 3-5 sentence requirement)"}
                 </div>
                 <p className="text-sm text-[var(--ink-primary)] leading-relaxed">
-                  1. Znak łączy heraldyczną tarczę bezpieczeństwa publicznego i znacznik lokalizacji (pinezkę GPS) z międzynarodowym symbolem defibrylatora AED (serce z impulsem elektrycznym na tle krzyża medycznego). 2. Biało-czerwona wstęga spina sygnet z tożsamością państwową Rzeczypospolitej Polskiej oraz systemem Państwowego Ratownictwa Medycznego i portalu dane.gov.pl. 3. Zestawienie głębokiego granatu państwowego (#152B45) z narodowym karmazynem (#D9173B) zapewnia natychmiastową rozpoznawalność w sytuacji zagrożenia życia i pełną czytelność zgodnie z WCAG 2.1 AA. 4. Zwarta, symetryczna konstrukcja sprawdza się zarówno jako oznakowanie fizycznych kapsuł AED, jak i w interfejsach mobilnych, webowych oraz materiałach promocyjnych kierowanych do dysponentów danych.
+                  1. Znak łączy heraldyczną tarczę bezpieczeństwa publicznego i znacznik lokalizacji (pinezkę GPS) z międzynarodowym symbolem defibrylatora AED (serce z impulsem elektrycznym na tle krzyża medycznego). 2. Biało-czerwona wstęga podkreśla ogólnopolski zasięg inicjatywy oraz jej wsparcie dla ratownictwa medycznego i otwartych danych publicznych. 3. Zestawienie głębokiego granatu (#152B45) z karmazynem (#D9173B) zapewnia natychmiastową rozpoznawalność w sytuacji zagrożenia życia i pełną czytelność zgodnie z WCAG 2.1 AA. 4. Zwarta, symetryczna konstrukcja sprawdza się zarówno jako oznakowanie fizycznych kapsuł AED, jak i w interfejsach mobilnych, webowych oraz materiałach promocyjnych kierowanych do dysponentów danych.
                 </p>
               </div>
             </div>
@@ -366,8 +366,8 @@ export function CampaignView({ locale, onNavigate }: CampaignViewProps) {
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--gov-blue)]">
               {isPl
-                ? "3. Wzorcowy zakres danych o defibrylatorach dla portalu dane.gov.pl (10% kryteriów oceny)"
-                : "3. Reference AED Data Standard for dane.gov.pl (10% evaluation weight)"}
+                ? "3. Wzorcowy zakres danych o defibrylatorach dla otwartych rejestrów (10% kryteriów oceny)"
+                : "3. Reference AED Open Data Standard (10% evaluation weight)"}
             </span>
             <h2 className="text-xl font-bold text-[var(--ink-primary)] mt-0.5">
               {isPl

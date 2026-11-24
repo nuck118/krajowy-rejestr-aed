@@ -292,8 +292,6 @@ export function MapFinderView({
         >
           <span>{t.breadcrumbHome}</span>
           <span aria-hidden="true">/</span>
-          <span>{t.breadcrumbMinistry}</span>
-          <span aria-hidden="true">/</span>
           <span className="text-[var(--ink-primary)] font-semibold">
             {t.breadcrumbCurrent}
           </span>

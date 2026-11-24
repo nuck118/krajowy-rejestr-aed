@@ -1,7 +1,6 @@
 import { docsUrl } from "../../api/client";
 import { TRANSLATIONS, type Locale } from "../../i18n/translations";
 import { ContrastIcon, CrosshairIcon, ExternalLinkIcon } from "../icons/Icons";
-import { PolishCoatOfArms } from "../icons/PolishCoatOfArms";
 
 export type AppTab = "map" | "harvester" | "submit" | "campaign";
 export type FontScale = "md" | "lg" | "xl";
@@ -41,25 +40,11 @@ export function TopBar({
 
   return (
     <header className="w-full bg-[var(--bg-canvas)] shrink-0 z-30">
-      {/* Band 1: Official gov.pl Global Top Bar (.govpl) */}
+      {/* Band 1: Utility, Language & Accessibility Strip */}
       <div className="bg-[var(--bg-canvas)] border-b-2 border-[var(--border-subtle)] px-3 sm:px-4 py-2">
         <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => onTabChange("map")}
-              className="flex items-center gap-2 text-left cursor-pointer hover:underline"
-            >
-              <PolishCoatOfArms className="h-7 w-auto shrink-0" />
-              <span className="font-[var(--font-display)] font-extrabold text-lg text-[var(--ink-primary)] tracking-tight leading-none">
-                gov.pl
-              </span>
-            </button>
-            <span
-              className="w-[2px] h-6 bg-[var(--gov-crimson)] shrink-0"
-              aria-hidden="true"
-            />
-            <span className="text-[var(--ink-primary)] font-normal text-xs sm:text-sm">
+            <span className="text-[var(--ink-secondary)] font-medium text-xs sm:text-sm">
               {t.serviceName}
             </span>
           </div>
@@ -137,21 +122,11 @@ export function TopBar({
               <ContrastIcon className="w-3.5 h-3.5" />
               <span>{t.highContrast}</span>
             </button>
-
-            <a
-              href="https://dane.gov.pl"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-1 text-[var(--gov-blue)] hover:underline font-medium"
-            >
-              <span>dane.gov.pl</span>
-              <ExternalLinkIcon className="w-3 h-3" />
-            </a>
           </div>
         </div>
       </div>
 
-      {/* Band 2: Official gov.pl Ministry Unit Header (.page-header) */}
+      {/* Band 2: Portal Header */}
       <div className="bg-[var(--bg-canvas)] px-3 sm:px-4 pt-5 pb-3">
         <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <button
@@ -159,11 +134,12 @@ export function TopBar({
             onClick={() => onTabChange("map")}
             className="flex items-center gap-4 text-left cursor-pointer rounded-[4px] group"
           >
-            <PolishCoatOfArms className="h-12 sm:h-14 w-auto shrink-0" />
+            <img
+              src="/deliverables/logotyp_misja_aed.png"
+              alt={t.portalTitle}
+              className="h-14 sm:h-16 w-auto shrink-0 object-contain"
+            />
             <span className="flex flex-col">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-secondary)]">
-                {t.ministryName}
-              </span>
               <span className="font-[var(--font-display)] text-2xl sm:text-[1.75rem] font-bold tracking-[-0.015em] text-[var(--ink-primary)] group-hover:text-[var(--gov-blue)] leading-tight transition-colors">
                 {t.portalTitle}
               </span>

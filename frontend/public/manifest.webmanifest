@@ -1,7 +1,7 @@
 {
   "name": "Krajowy Rejestr AED",
   "short_name": "Rejestr AED",
-  "description": "Krajowy Rejestr Defibrylatorow AED (Ministerstwo Cyfryzacji)",
+  "description": "Krajowy Rejestr AED - Otwarta Baza Defibrylatorow",
   "lang": "pl",
   "start_url": "/",
   "display": "standalone",
